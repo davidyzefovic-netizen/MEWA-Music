@@ -1,0 +1,6 @@
+{
+  "name": "MEWA",
+  "description": "A collaborative song streaming and lyrics platform featuring real-time lyric synchronization, customizable playlists, DMCA copyright reporting, and role-based access for creators and administrators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
