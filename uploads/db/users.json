@@ -1,0 +1,12 @@
+{
+  "local-admin": {
+    "uid": "local-admin",
+    "email": "davidyzefovic@gmail.com",
+    "displayName": "Local Admin",
+    "photoURL": "",
+    "role": "admin",
+    "preferredGenres": [],
+    "createdAt": "2026-07-07T15:48:41.319Z",
+    "id": "local-admin"
+  }
+}

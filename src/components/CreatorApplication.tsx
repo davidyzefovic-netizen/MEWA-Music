@@ -80,7 +80,7 @@ export default function CreatorApplication({ userProfile, onApply }: CreatorAppl
 
         <form onSubmit={handleSubmit} className="space-y-5 rounded-none border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50">
           <div>
-            <label className="mb-1.5 block font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+            <label className="mb-1.5 block font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
               Artist / Band Name *
             </label>
             <input
@@ -93,7 +93,7 @@ export default function CreatorApplication({ userProfile, onApply }: CreatorAppl
           </div>
 
           <div>
-            <label className="mb-1.5 block font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+            <label className="mb-1.5 block font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
               Links to your Music (Spotify, Soundcloud, YouTube) *
             </label>
             <textarea
@@ -106,7 +106,7 @@ export default function CreatorApplication({ userProfile, onApply }: CreatorAppl
           </div>
 
           <div>
-            <label className="mb-1.5 block font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+            <label className="mb-1.5 block font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
               Additional Details (Optional)
             </label>
             <textarea

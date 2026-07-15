@@ -15,7 +15,7 @@ import {
   Type,
   Wand2,
 } from "lucide-react";
-import { User } from "firebase/auth";
+import { User } from "../types";
 import { UserProfile, Notification, AppView } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -64,10 +64,12 @@ export default function Header({
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-zinc-800 bg-zinc-950 px-6 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-[#050505]">
       {/* Brand Logo */}
+      {!isMobileSearchActive && (
       <div
         className="flex cursor-pointer items-center gap-2.5"
         onClick={() => setCurrentView("home")}
@@ -95,9 +97,15 @@ export default function Header({
         </div>
       </div>
 
+      )}
       {/* Global Search Bar */}
-      <div className="relative flex w-full max-w-md items-center">
+      <div className={`relative flex w-full max-w-md items-center ${isMobileSearchActive ? "flex" : "hidden md:flex"}`}>
         <Search className="absolute left-3.5 h-4 w-4 text-zinc-400 pointer-events-none" />
+        {(isMobileSearchActive) && (
+          <button onClick={() => setIsMobileSearchActive(false)} className="md:hidden mr-2 p-2 text-zinc-400">
+            <X className="h-5 w-5" />
+          </button>
+        )}
         <input
           type="text"
           placeholder="Search by song, artist, genre or tag..."
@@ -126,6 +134,15 @@ export default function Header({
       {/* Control Actions / User Info */}
       <div className="flex items-center gap-2">
         {/* Settings Toggles */}
+        {!isMobileSearchActive && (
+          <button
+            onClick={() => setIsMobileSearchActive(true)}
+            className="md:hidden flex h-10 w-10 items-center justify-center rounded-none text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+        )}
+        <div className="hidden md:flex items-center gap-2">
         <button
           onClick={() => setShowRightPanel(!showRightPanel)}
           className="flex h-10 w-10 items-center justify-center rounded-none text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
@@ -161,9 +178,10 @@ export default function Header({
 
         <div className="w-px h-6 bg-zinc-800 mx-1"></div>
 
+        </div>
         {/* Notifications Button */}
         {user && (
-          <div className="relative">
+          <div className="relative hidden md:block">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="flex h-10 w-10 items-center justify-center rounded-none text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
@@ -259,7 +277,7 @@ export default function Header({
             {/* User Role Badge */}
             {userProfile && (
               <div
-                className={`hidden items-center gap-1 rounded-none px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider md:flex ${
+                className={`hidden items-center gap-1 rounded-none px-2.5 py-1 font-mono text-[11px] md:text-[10px] font-semibold uppercase tracking-wider md:flex ${
                   userProfile.role === "admin"
                     ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
                     : userProfile.role === "author"

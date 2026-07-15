@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { User } from "firebase/auth";
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  query,
-  where,
-  updateDoc,
-  addDoc,
-  deleteDoc,
-  increment,
-  writeBatch,
-} from "firebase/firestore";
-import { auth, loginWithGoogle, logoutUser, db, OperationType, handleFirestoreError } from "./firebase";
+
+import { User } from "./types";
+import { auth, loginWithGoogle, logoutUser, db, OperationType, handleFirestoreError, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, increment, query, where, onSnapshot } from "./firebase";
 import { Song, Playlist, UserProfile, Complaint, Notification, AppView, UserRole, ArtistProfile, Album } from "./types";
 import { INITIAL_SONGS, GENRES_LIST } from "./initialSongs";
 import Header from "./components/Header";
@@ -33,6 +20,10 @@ import UserProfilePage from "./components/UserProfilePage";
 import AuthModal from "./components/AuthModal";
 import { motion, AnimatePresence } from "motion/react";
 import {
+  Home,
+  Users,
+  ListMusic,
+  User as UserIcon,
   Plus,
   Play,
   Heart,
@@ -67,6 +58,7 @@ export default function App() {
   const [banners, setBanners] = useState<import("./types").Banner[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [creatorApplications, setCreatorApplications] = useState<import("./types").CreatorApplication[]>([]);
 
   // Player controls state
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
@@ -161,7 +153,7 @@ export default function App() {
             }
           }
         } catch (err) {
-          console.error("Failed to sync user profile: ", err);
+          if (err && String(err).includes("Quota")) console.warn("User Profile: Quota exceeded, using offline mode"); else console.error("Failed to sync user profile: ", err);
           // Fallback if offline
           const isBootstrappedAdmin =
             firebaseUser.email?.toLowerCase() === "davidyzefovic@gmail.com" ||
@@ -189,52 +181,41 @@ export default function App() {
   }, []);
 
   // Listen to Songs in real-time
+  // Load Songs from Server API instead of Firebase
   useEffect(() => {
-    const isPrivileged = userProfile && (userProfile.role === "admin" || userProfile.role === "author");
-    const songsCol = collection(db, "songs");
-    const songsQuery = isPrivileged
-      ? songsCol
-      : query(songsCol, where("status", "==", "approved"));
-
-    const unsubscribe = onSnapshot(
-      songsQuery,
-      async (snapshot) => {
-        const loadedSongs: Song[] = [];
-        snapshot.forEach((doc) => {
-          loadedSongs.push(doc.data() as Song);
-        });
-
-        // Seed initial tracks if collection is completely empty
-        if (loadedSongs.length === 0) {
-          if (isPrivileged) {
-            console.log("Database songs collection is blank. Seeding initial library...");
-            try {
-              const batch = writeBatch(db);
-              INITIAL_SONGS.forEach((song) => {
-                const songDocRef = doc(db, "songs", song.id);
-                batch.set(songDocRef, {
-                  ...song,
-                  createdAt: new Date().toISOString(),
-                });
-              });
-              await batch.commit();
-            } catch (e) {
-              console.error("Seeding initial tracks failed: ", e);
-            }
+    const fetchCatalog = async () => {
+      try {
+        const [songsRes, artistsRes, albumsRes] = await Promise.all([
+          fetch('/api/songs'),
+          fetch('/api/artists'),
+          fetch('/api/albums')
+        ]);
+        
+        if (songsRes.ok) {
+          const loadedSongs: Song[] = await songsRes.json();
+          // Seed fallback if absolutely empty
+          if (loadedSongs.length === 0) {
+             setSongs(INITIAL_SONGS);
           } else {
-            // Fallback to local approved initial songs if Firestore is empty
-            setSongs(INITIAL_SONGS.filter(s => s.status === "approved"));
+             setSongs(loadedSongs);
           }
-        } else {
-          setSongs(loadedSongs);
         }
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.LIST, "songs");
-      }
-    );
+        
+        if (artistsRes.ok) {
+          const loadedArtists = await artistsRes.json();
+          setArtists(loadedArtists);
+        }
 
-    return () => unsubscribe();
+        if (albumsRes.ok) {
+          const loadedAlbums = await albumsRes.json();
+          setAlbums(loadedAlbums);
+        }
+      } catch (err) {
+        console.error("Failed to fetch catalog from server", err);
+      }
+    };
+
+    fetchCatalog();
   }, [userProfile]);
 
   // Listen to Banners in real-time
@@ -250,51 +231,13 @@ export default function App() {
         setBanners(loadedBanners);
       },
       (error) => {
-        console.error("Failed to fetch banners: ", error);
+        if (error && String(error).includes("Quota")) console.warn("Banners: Quota exceeded"); else console.error("Failed to fetch banners: ", error);
       }
     );
     return () => unsubscribe();
   }, []);
 
-  // Listen to Artists in real-time
-  useEffect(() => {
-    const artistsCol = collection(db, "artists");
-    const unsubscribe = onSnapshot(
-      artistsCol,
-      (snapshot) => {
-        const loadedArtists: ArtistProfile[] = [];
-        snapshot.forEach((doc) => {
-          loadedArtists.push(doc.data() as ArtistProfile);
-        });
-        setArtists(loadedArtists);
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.LIST, "artists");
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // Listen to Albums in real-time
-  useEffect(() => {
-    const albumsCol = collection(db, "albums");
-    const unsubscribe = onSnapshot(
-      albumsCol,
-      (snapshot) => {
-        const loadedAlbums: Album[] = [];
-        snapshot.forEach((doc) => {
-          loadedAlbums.push(doc.data() as Album);
-        });
-        setAlbums(loadedAlbums);
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.LIST, "albums");
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
+  // Banners still from firebase (optional)
 
   // Listen to user-specific data (Playlists, Favorites, History, Complaints, Notifications)
   useEffect(() => {
@@ -306,7 +249,7 @@ export default function App() {
       const list: Playlist[] = [];
       snap.forEach((d) => list.push(d.data() as Playlist));
       setPlaylists(list);
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("Playlists: Quota exceeded"); else console.error("playlists snapshot error", err); setPlaylists([]); });
 
     // 2. Favorites subcollection
     const favCol = collection(db, "users", user.uid, "favorites");
@@ -316,7 +259,7 @@ export default function App() {
         list.push(d.data().songId);
       });
       setFavorites(list);
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("Favs: Quota exceeded"); else console.error("favs snapshot error", err); setFavorites([]); });
 
     // 3. Playback History log
     const histQuery = query(collection(db, "listeningHistory"), where("userId", "==", user.uid));
@@ -324,7 +267,7 @@ export default function App() {
       const list: any[] = [];
       snap.forEach((d) => list.push(d.data()));
       setHistory(list.sort((a, b) => b.playedAt.localeCompare(a.playedAt)));
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("History: Quota exceeded"); else console.error("history snapshot error", err); setHistory([]); });
 
     // 4. Notifications
     const notifQuery = query(collection(db, "notifications"), where("userId", "==", user.uid));
@@ -332,7 +275,7 @@ export default function App() {
       const list: Notification[] = [];
       snap.forEach((d) => list.push(d.data() as Notification));
       setNotifications(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("Notifs: Quota exceeded"); else console.error("notifs snapshot error", err); setNotifications([]); });
 
     return () => {
       unsubPlaylists();
@@ -356,7 +299,7 @@ export default function App() {
       const list: UserProfile[] = [];
       snap.forEach((d) => list.push(d.data() as UserProfile));
       setAllUsers(list);
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("Users: Quota exceeded"); else console.error("users snapshot error", err); setAllUsers([]); });
 
     // 2. Complaints queue
     const complaintsCol = collection(db, "complaints");
@@ -364,11 +307,20 @@ export default function App() {
       const list: Complaint[] = [];
       snap.forEach((d) => list.push(d.data() as Complaint));
       setComplaints(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-    });
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("Complaints: Quota exceeded"); else console.error("complaints snapshot error", err); setComplaints([]); });
+
+    // 3. Creator Applications
+    const creatorAppsCol = collection(db, "creator_applications");
+    const unsubCreatorApps = onSnapshot(creatorAppsCol, (snap) => {
+      const list: import("./types").CreatorApplication[] = [];
+      snap.forEach((d) => list.push(d.data() as import("./types").CreatorApplication));
+      setCreatorApplications(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    }, (err) => { if (err && String(err).includes("Quota")) console.warn("CreatorApps: Quota exceeded"); else console.error("creator apps snapshot error", err); setCreatorApplications([]); });
 
     return () => {
       unsubUsers();
       unsubComplaints();
+      unsubCreatorApps();
     };
   }, [userProfile]);
 
@@ -465,6 +417,7 @@ export default function App() {
       await updateDoc(songDocRef, {
         listensCount: increment(1),
       });
+      setSongs(prev => prev.map(s => s.id === songId ? { ...s, listensCount: (s.listensCount || 0) + 1 } : s));
 
       // 2. Insert tracking log to listeningHistory
       const logId = `${user.uid}_${songId}_${Date.now()}`;
@@ -505,6 +458,7 @@ export default function App() {
         await updateDoc(doc(db, "songs", songId), {
           likesCount: increment(-1),
         });
+        setSongs(prev => prev.map(s => s.id === songId ? { ...s, likesCount: Math.max(0, (s.likesCount || 0) - 1) } : s));
       } else {
         await setDoc(favDocRef, {
           userId: user.uid,
@@ -515,6 +469,7 @@ export default function App() {
         await updateDoc(doc(db, "songs", songId), {
           likesCount: increment(1),
         });
+        setSongs(prev => prev.map(s => s.id === songId ? { ...s, likesCount: (s.likesCount || 0) + 1 } : s));
       }
     } catch (err) {
       console.error("Failed toggle favorite: ", err);
@@ -622,6 +577,7 @@ export default function App() {
       await updateDoc(doc(db, "songs", songId), {
         status: targetStatus,
       });
+      setSongs(prev => prev.map(s => s.id === songId ? { ...s, status: targetStatus } : s));
 
       // If approved, notify followers/favoriters of this artist/creator!
       if (targetStatus === "approved") {
@@ -664,6 +620,7 @@ export default function App() {
   const handleUpdateSongDetails = async (songId: string, updatedFields: Partial<Song>) => {
     try {
       await updateDoc(doc(db, "songs", songId), updatedFields);
+      setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...updatedFields } : s));
     } catch (err) {
       console.error(err);
     }
@@ -709,7 +666,7 @@ export default function App() {
     const status = userProfile?.role === "admin" ? "approved" : "pending";
 
     try {
-      await setDoc(doc(db, "songs", songId), {
+      const newSong = {
         ...songData,
         id: songId,
         uploadedBy: user.uid,
@@ -718,7 +675,9 @@ export default function App() {
         listensCount: 0,
         likesCount: 0,
         createdAt: new Date().toISOString(),
-      });
+      };
+      await setDoc(doc(db, "songs", songId), newSong);
+      setSongs(prev => [newSong, ...prev]);
       return songId;
     } catch (err) {
       console.error(err);
@@ -730,11 +689,13 @@ export default function App() {
   const handleCreateArtistProfile = async (artistData: Omit<ArtistProfile, "views" | "createdAt">) => {
     if (!user) throw new Error("Authentication required");
     try {
-      await setDoc(doc(db, "artists", artistData.id), {
+      const newArtist = {
         ...artistData,
         views: 0,
         createdAt: new Date().toISOString(),
-      });
+      };
+      await setDoc(doc(db, "artists", artistData.id), newArtist);
+      setArtists(prev => [newArtist, ...prev]);
     } catch (err) {
       console.error("Failed to create artist profile:", err);
       throw err;
@@ -744,6 +705,7 @@ export default function App() {
   const handleUpdateArtistProfile = async (artistId: string, updatedFields: Partial<ArtistProfile>) => {
     try {
       await updateDoc(doc(db, "artists", artistId), updatedFields);
+      setArtists(prev => prev.map(a => a.id === artistId ? { ...a, ...updatedFields } : a));
     } catch (err) {
       console.error("Failed to update artist profile:", err);
       throw err;
@@ -784,6 +746,7 @@ export default function App() {
   const handleUpdateAlbum = async (albumId: string, updatedFields: Partial<Album>) => {
     try {
       await updateDoc(doc(db, "albums", albumId), updatedFields);
+      setAlbums(prev => prev.map(a => a.id === albumId ? { ...a, ...updatedFields } : a));
     } catch (err) {
       console.error("Failed to update album:", err);
       throw err;
@@ -830,6 +793,21 @@ export default function App() {
     } else {
       setCurrentView("artists");
       alert(`The Artist profile page for "${artistName}" hasn't been created yet. You can create it now!`);
+    }
+  };
+
+  const handleUpdateApplicationStatus = async (appId: string, status: "approved" | "rejected") => {
+    try {
+      await updateDoc(doc(db, "creator_applications", appId), {
+        status,
+      });
+
+      const application = creatorApplications.find(a => a.id === appId);
+      if (application && status === "approved") {
+        await handleUpdateUserRole(application.userId, "author");
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -939,6 +917,7 @@ export default function App() {
         (s) =>
           s.title.toLowerCase().includes(q) ||
           s.artist.toLowerCase().includes(q) ||
+          s.featuredArtists?.some((fa) => fa.toLowerCase().includes(q)) ||
           s.genres?.some((g) => g.toLowerCase().includes(q)) ||
           s.tags?.some((t) => t.toLowerCase().includes(q))
       );
@@ -991,7 +970,7 @@ export default function App() {
         />
 
         {/* MAIN BODY AREA */}
-        <main className="flex-1 overflow-hidden bg-white dark:bg-zinc-900 flex flex-col transition-colors">
+        <main className="flex-1 overflow-hidden bg-white dark:bg-zinc-900 flex flex-col transition-colors pb-16 md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -1059,7 +1038,7 @@ export default function App() {
 
                           if (myWaveSongs.length > 0) {
                             const randomSong = myWaveSongs[Math.floor(Math.random() * myWaveSongs.length)];
-                            handlePlaySong(randomSong);
+                            handlePlaySong(randomSong, myWaveSongs);
                           }
                        }}
                   >
@@ -1096,7 +1075,7 @@ export default function App() {
                   <button
                     key={genre}
                     onClick={() => setSelectedGenre(genre)}
-                    className={`rounded-none border px-4 py-1.5 font-sans text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    className={`rounded-none border px-4 py-1.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest transition-all ${
                       selectedGenre === genre
                         ? "bg-zinc-950 text-white border-zinc-950 dark:bg-white dark:text-zinc-950 dark:border-white"
                         : "bg-transparent text-zinc-500 border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-950"
@@ -1149,7 +1128,7 @@ export default function App() {
                       song={song}
                       isPlaying={isPlaying}
                       isCurrent={currentSong?.id === song.id}
-                      onPlay={handlePlaySong}
+                      onPlay={(s) => handlePlaySong(s, filteredSongsToDisplay)}
                       favorites={favorites}
                       onToggleFavorite={handleToggleFavorite}
                       playlists={playlists}
@@ -1231,7 +1210,7 @@ export default function App() {
                             </span>
                           </div>
                           <button
-                            onClick={() => handlePlaySong(song)}
+                            onClick={() => handlePlaySong(song, history.map(l => songs.find(s => s.id === l.songId)).filter(Boolean))}
                             className="flex h-9 w-9 items-center justify-center rounded-none bg-zinc-100 text-zinc-700 dark:bg-zinc-850 dark:text-zinc-300 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 transition-colors"
                           >
                             <Play className="h-4.5 w-4.5 fill-current ml-0.5" />
@@ -1287,7 +1266,7 @@ export default function App() {
                           <button
                             key={genre}
                             onClick={() => handleGenrePrefToggle(genre)}
-                            className={`rounded-none border px-3.5 py-1 font-sans text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            className={`rounded-none border px-3.5 py-1 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider transition-all ${
                               isPref
                                 ? "bg-red-600 text-white border-red-600"
                                 : "bg-transparent text-zinc-500 border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900"
@@ -1317,7 +1296,7 @@ export default function App() {
                             song={song}
                             isPlaying={isPlaying}
                             isCurrent={currentSong?.id === song.id}
-                            onPlay={handlePlaySong}
+                            onPlay={(s) => handlePlaySong(s, filteredSongsToDisplay)}
                             favorites={favorites}
                             onToggleFavorite={handleToggleFavorite}
                             playlists={playlists}
@@ -1351,7 +1330,7 @@ export default function App() {
                 {user && (
                   <button
                     onClick={() => setShowCreatePlaylistModal(true)}
-                    className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-950 px-5 font-sans text-[10px] uppercase tracking-widest font-bold text-white shadow-sm dark:bg-white dark:text-zinc-950 border border-zinc-950 dark:border-white"
+                    className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-950 px-5 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm dark:bg-white dark:text-zinc-950 border border-zinc-950 dark:border-white"
                   >
                     <Plus className="h-4 w-4" /> Create Playlist
                   </button>
@@ -1392,13 +1371,13 @@ export default function App() {
 
                     {/* Offline sync toggle */}
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">Offline Sync:</span>
+                      <span className="font-mono text-[11px] md:text-[10px] uppercase tracking-wider text-zinc-500">Offline Sync:</span>
                       <button
                         onClick={() => {
                           const anyNotInLocal = selectedPlaylist.songIds.some((id) => !downloadedSongs.includes(id));
                           handleTogglePlaylistOffline(selectedPlaylist, anyNotInLocal);
                         }}
-                        className={`flex h-8 items-center gap-1.5 rounded-none px-3.5 font-sans text-[10px] uppercase tracking-wider font-bold shadow-sm transition-all ${
+                        className={`flex h-8 items-center gap-1.5 rounded-none px-3.5 font-sans text-[11px] md:text-[10px] uppercase tracking-wider font-bold shadow-sm transition-all ${
                           selectedPlaylist.songIds.every((id) => downloadedSongs.includes(id)) && selectedPlaylist.songIds.length > 0
                             ? "bg-red-600 text-white"
                             : "bg-zinc-100 text-zinc-600 dark:bg-zinc-850 dark:text-zinc-400"
@@ -1437,7 +1416,7 @@ export default function App() {
                                 <h4 className="font-serif text-xs font-bold text-zinc-900 dark:text-zinc-100">
                                   {song.title}
                                 </h4>
-                                <p className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400">
+                                <p className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400">
                                   {song.artist}
                                 </p>
                               </div>
@@ -1445,7 +1424,7 @@ export default function App() {
 
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => handlePlaySong(song)}
+                                onClick={() => handlePlaySong(song, selectedPlaylist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean))}
                                 className="rounded-none p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-red-600"
                               >
                                 <Play className="h-4 w-4 fill-current ml-0.5" />
@@ -1515,10 +1494,18 @@ export default function App() {
             <CreatorApplication
               userProfile={userProfile}
               onApply={async (details) => {
-                // In a real app, this would write to Firestore.
-                // For this demo, we'll just simulate a delay.
-                await new Promise((resolve) => setTimeout(resolve, 1500));
-                console.log("Application submitted:", details);
+                if (!userProfile) throw new Error("Not logged in");
+                const appId = `app_${Date.now()}_${userProfile.uid}`;
+                await setDoc(doc(db, "creator_applications", appId), {
+                  id: appId,
+                  userId: userProfile.uid,
+                  userEmail: userProfile.email,
+                  artistName: details.artistName,
+                  links: details.links,
+                  description: details.description,
+                  status: "pending",
+                  createdAt: new Date().toISOString()
+                });
               }}
             />
           )}
@@ -1677,6 +1664,7 @@ export default function App() {
               songs={songs}
               onUploadSong={handleUploadSongByCreator}
               onEditSong={handleUpdateSongDetails}
+              onDeleteSong={handleDeleteSong}
             />
           )}
 
@@ -1687,11 +1675,13 @@ export default function App() {
               songs={songs}
               complaints={complaints}
               banners={banners}
+              creatorApplications={creatorApplications}
               onUpdateUserRole={handleUpdateUserRole}
               onUpdateSongStatus={handleUpdateSongStatus}
               onDeleteSong={handleDeleteSong}
               onUpdateSongDetails={handleUpdateSongDetails}
               onUpdateComplaintStatus={handleUpdateComplaintStatus}
+              onUpdateApplicationStatus={handleUpdateApplicationStatus}
               onAddBanner={handleAddBanner}
               onUpdateBanner={handleUpdateBanner}
               onDeleteBanner={handleDeleteBanner}
@@ -1709,6 +1699,31 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
+      </div>
+
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-zinc-200 bg-white/95 dark:border-zinc-800 dark:bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] pt-2 pb-2 h-auto min-h-[4rem]">
+        {[
+          { id: 'home', icon: <Home className="h-5 w-5" />, label: 'Главная' },
+          { id: 'artists', icon: <Users className="h-5 w-5" />, label: 'Артисты' },
+          { id: 'favorites', icon: <Heart className="h-5 w-5" />, label: 'Избранное' },
+          { id: 'playlists', icon: <ListMusic className="h-5 w-5" />, label: 'Плейлисты' },
+          { id: 'profile', icon: <UserIcon className="h-5 w-5" />, label: 'Профиль' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setCurrentView(item.id as AppView)}
+            className={`flex flex-col items-center justify-center w-full h-full gap-1 ${
+              currentView === item.id 
+                ? "text-red-600 dark:text-red-500" 
+                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            }`}
+          >
+            {item.icon}
+            <span className="font-sans text-[11px] md:text-[10px] font-semibold">{item.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* FLOATING MEDIA AUDIO PLAYER */}
@@ -1760,7 +1775,7 @@ export default function App() {
               </div>
               <div className="space-y-5">
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Настроение</label>
+                  <label className="block font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Настроение</label>
                   <select
                     value={myWaveMood}
                     onChange={(e) => setMyWaveMood(e.target.value as any)}
@@ -1774,7 +1789,7 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Характер треков</label>
+                  <label className="block font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Характер треков</label>
                   <select
                     value={myWaveFamiliarity}
                     onChange={(e) => setMyWaveFamiliarity(e.target.value as any)}
@@ -1900,7 +1915,7 @@ export default function App() {
                     <h5 className="font-sans text-xs font-bold text-zinc-900 dark:text-white truncate">
                       {selectedComplaintSong.title}
                     </h5>
-                    <p className="font-sans text-[10px] text-zinc-400 truncate">
+                    <p className="font-sans text-[11px] md:text-[10px] text-zinc-400 truncate">
                       By {selectedComplaintSong.artist}
                     </p>
                   </div>

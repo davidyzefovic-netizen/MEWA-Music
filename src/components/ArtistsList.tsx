@@ -13,7 +13,18 @@ import {
   User,
 } from "lucide-react";
 import { ArtistProfile, UserProfile } from "../types";
-import { compressImage } from "../lib/indexedDbStorage";
+
+const uploadFileToServer = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error("Upload failed");
+  const data = await res.json();
+  return data.url;
+};
 
 interface ArtistsListProps {
   artists: ArtistProfile[];
@@ -50,24 +61,12 @@ export default function ArtistsList({
 
   const handleImageChange = async (file: File) => {
     setImageFile(file);
-    try {
-      const base64 = await compressImage(file, 800, 800);
-      setImagePreview(base64);
-    } catch (e) {
-      console.error(e);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleBannerChange = async (file: File) => {
     setBannerFile(file);
-    try {
-      const base64 = await compressImage(file, 1200, 600);
-      setBannerPreview(base64);
-    } catch (e) {
-      console.error(e);
-      setBannerPreview(URL.createObjectURL(file));
-    }
+    setBannerPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,10 +151,10 @@ export default function ArtistsList({
           />
         </div>
 
-        {userProfile && (
+        {userProfile && userProfile.role === "admin" && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex h-10 items-center justify-center gap-2 rounded-none bg-red-600 px-5 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/15 hover:bg-red-700 transition-all cursor-pointer"
+            className="flex h-10 items-center justify-center gap-2 rounded-none bg-red-600 px-5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/15 hover:bg-red-700 transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Create Artist Page
           </button>
@@ -219,7 +218,7 @@ export default function ArtistsList({
                 )}
 
                 {/* Info Badges */}
-                <div className="mt-4 flex flex-wrap items-center justify-between border-t border-zinc-100 pt-3 text-[10px] text-zinc-450 dark:border-zinc-900">
+                <div className="mt-4 flex flex-wrap items-center justify-between border-t border-zinc-100 pt-3 text-[11px] md:text-[10px] text-zinc-450 dark:border-zinc-900">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     <span>{artist.hometown || "Unknown"}</span>
@@ -329,14 +328,14 @@ export default function ArtistsList({
                       <div className="flex items-center gap-2 w-full text-left">
                         <img src={imagePreview} alt="Preview" className="h-14 w-14 object-cover border border-zinc-250 dark:border-zinc-800 shrink-0" />
                         <div className="overflow-hidden">
-                          <p className="font-sans text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{imageFile?.name || "Compressed avatar"}</p>
+                          <p className="font-sans text-[11px] md:text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{imageFile?.name || "Compressed avatar"}</p>
                           <p className="font-mono text-[8px] text-zinc-400">JPEG Optimized</p>
                         </div>
                       </div>
                     ) : (
                       <>
                         <User className="h-5 w-5 text-zinc-400 mb-1 group-hover:text-red-500 transition-colors" />
-                        <span className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400">Choose Profile Image</span>
+                        <span className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400">Choose Profile Image</span>
                       </>
                     )}
                   </div>
@@ -371,14 +370,14 @@ export default function ArtistsList({
                       <div className="flex items-center gap-2 w-full text-left">
                         <img src={bannerPreview} alt="Preview" className="h-14 w-20 object-cover border border-zinc-250 dark:border-zinc-800 shrink-0" />
                         <div className="overflow-hidden">
-                          <p className="font-sans text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{bannerFile?.name || "Compressed banner"}</p>
+                          <p className="font-sans text-[11px] md:text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{bannerFile?.name || "Compressed banner"}</p>
                           <p className="font-mono text-[8px] text-zinc-400">JPEG Optimized</p>
                         </div>
                       </div>
                     ) : (
                       <>
                         <FileImage className="h-5 w-5 text-zinc-400 mb-1 group-hover:text-red-500 transition-colors" />
-                        <span className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400">Choose Header Banner</span>
+                        <span className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400">Choose Header Banner</span>
                       </>
                     )}
                   </div>
@@ -399,7 +398,7 @@ export default function ArtistsList({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Creating Page..." : "Deploy Artist Biography Page"}
               </button>

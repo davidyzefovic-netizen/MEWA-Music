@@ -210,7 +210,7 @@ export default function SongRow({
                   </p>
                   <div className="max-h-24 overflow-y-auto border-b border-zinc-100 pb-1.5 mb-1.5 dark:border-zinc-900 space-y-0.5">
                     {playlists.length === 0 ? (
-                      <p className="px-2 py-0.5 font-sans text-[10px] text-zinc-400 italic">
+                      <p className="px-2 py-0.5 font-sans text-[11px] md:text-[10px] text-zinc-400 italic">
                         No playlists
                       </p>
                     ) : (

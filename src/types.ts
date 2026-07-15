@@ -1,3 +1,9 @@
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
 export type UserRole = "user" | "author" | "admin";
 
 export interface UserProfile {
@@ -104,6 +110,17 @@ export interface Banner {
   imageUrl: string;
   linkUrl?: string; // Optional link, e.g. to album, artist, or external
   isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreatorApplication {
+  id: string;
+  userId: string;
+  userEmail: string;
+  artistName: string;
+  links: string;
+  description: string;
+  status: "pending" | "approved" | "rejected";
   createdAt: string;
 }
 

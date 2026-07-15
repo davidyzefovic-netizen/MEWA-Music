@@ -1,0 +1,26 @@
+{
+  "id_1783439205814": {
+    "msg": "Uncaught ReferenceError: collection is not defined",
+    "line": 182,
+    "col": 24,
+    "stack": "ReferenceError: collection is not defined\n    at http://localhost:3000/src/App.tsx:182:24\n    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:18565:20)\n    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:995:72)\n    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9409:163)\n    at commitHookPassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9463:60)\n    at commitPassiveMountOnFiber (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11038:29)\n    at recursivelyTraversePassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11008:13)\n    at commitPassiveMountOnFiber (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11199:13)\n    at recursivelyTraversePassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11008:13)\n    at commitPassiveMountOnFiber (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11064:13)",
+    "id": "id_1783439205814"
+  },
+  "id_1783439205839": {
+    "msg": "Uncaught ReferenceError: collection is not defined",
+    "line": 182,
+    "col": 24,
+    "stack": "ReferenceError: collection is not defined\n    at http://localhost:3000/src/App.tsx:182:24\n    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:18565:20)\n    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:995:72)\n    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9409:163)\n    at commitHookPassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9463:60)\n    at reconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11271:13)\n    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11238:11)\n    at reconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11315:13)\n    at doubleInvokeEffectsOnFiber (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:13337:135)\n    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:995:72)",
+    "id": "id_1783439205839"
+  },
+  "id_1783439285010": {
+    "msg": "Uncaught ReferenceError: collection is not defined",
+    "line": 182,
+    "col": 24,
+    "stack": "ReferenceError: collection is not defined\n    at http://localhost:3000/src/App.tsx:182:24\n    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:18565:20)\n    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:995:72)\n    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9409:163)\n    at commitHookPassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:9463:60)\n    at reconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11271:13)\n    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11238:11)\n    at reconnectPassiveEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:11315:13)\n    at doubleInvokeEffectsOnFiber (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:13337:135)\n    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=6b75fe99:995:72)",
+    "id": "id_1783439285010"
+  }
+}
+1783439285009"
+  }
+}

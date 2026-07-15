@@ -13,7 +13,7 @@ import {
   User as UserIcon,
   Search,
 } from "lucide-react";
-import { UserProfile, Song, Complaint, UserRole, Banner } from "../types";
+import { UserProfile, Song, Complaint, UserRole, Banner, CreatorApplication } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
 interface AdminDashboardProps {
@@ -21,11 +21,13 @@ interface AdminDashboardProps {
   songs: Song[];
   complaints: Complaint[];
   banners: Banner[];
+  creatorApplications?: CreatorApplication[];
   onUpdateUserRole: (userId: string, role: UserRole) => Promise<void>;
   onUpdateSongStatus: (songId: string, status: "approved" | "rejected") => Promise<void>;
   onDeleteSong: (songId: string) => Promise<void>;
   onUpdateSongDetails: (songId: string, updatedFields: Partial<Song>) => Promise<void>;
   onUpdateComplaintStatus: (complaintId: string, status: "resolved" | "dismissed") => Promise<void>;
+  onUpdateApplicationStatus?: (appId: string, status: "approved" | "rejected") => Promise<void>;
   onAddBanner: (imageUrl: string, linkUrl?: string) => Promise<void>;
   onUpdateBanner: (bannerId: string, isActive: boolean) => Promise<void>;
   onDeleteBanner: (bannerId: string) => Promise<void>;
@@ -36,16 +38,18 @@ export default function AdminDashboard({
   songs,
   complaints,
   banners,
+  creatorApplications = [],
   onUpdateUserRole,
   onUpdateSongStatus,
   onDeleteSong,
   onUpdateSongDetails,
   onUpdateComplaintStatus,
+  onUpdateApplicationStatus,
   onAddBanner,
   onUpdateBanner,
   onDeleteBanner,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"users" | "songs" | "complaints" | "banners">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "songs" | "complaints" | "banners" | "applications">("users");
   const [editingSong, setEditingSong] = useState<Song | null>(null);
 
   // Banner form states
@@ -130,7 +134,7 @@ export default function AdminDashboard({
       <div className="flex border-b border-zinc-200 dark:border-zinc-800">
         <button
           onClick={() => setActiveTab("users")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "users"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -140,7 +144,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("songs")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "songs"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -150,7 +154,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("complaints")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "complaints"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -160,13 +164,23 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("banners")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "banners"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
           }`}
         >
           <Search className="h-4 w-4" /> Banners ({banners.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("applications")}
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+            activeTab === "applications"
+              ? "border-red-600 text-red-600 dark:text-red-400"
+              : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+          }`}
+        >
+          <Users className="h-4 w-4" /> Applications ({creatorApplications.filter(a => a.status === "pending").length})
         </button>
       </div>
 
@@ -179,10 +193,10 @@ export default function AdminDashboard({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950/40">
-                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">User Profile</th>
-                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Email Address</th>
-                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Role Access</th>
-                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">User Profile</th>
+                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Email Address</th>
+                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Role Access</th>
+                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
@@ -286,13 +300,13 @@ export default function AdminDashboard({
                       <div className="flex items-center gap-2 self-end md:self-auto">
                         <button
                           onClick={() => onUpdateSongStatus(song.id, "approved")}
-                          className="flex h-8 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-sm hover:bg-red-700 cursor-pointer"
+                          className="flex h-8 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-sm hover:bg-red-700 cursor-pointer"
                         >
                           <Check className="h-3.5 w-3.5" /> Approve
                         </button>
                         <button
                           onClick={() => onUpdateSongStatus(song.id, "rejected")}
-                          className="flex h-8 items-center gap-1.5 rounded-none bg-zinc-150 border border-zinc-250 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-300 dark:border-zinc-700 cursor-pointer"
+                          className="flex h-8 items-center gap-1.5 rounded-none bg-zinc-150 border border-zinc-250 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-300 dark:border-zinc-700 cursor-pointer"
                         >
                           <X className="h-3.5 w-3.5" /> Reject
                         </button>
@@ -327,7 +341,7 @@ export default function AdminDashboard({
                           <h4 className="font-serif text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                             {song.title}
                           </h4>
-                          <p className="font-serif text-[10px] text-zinc-500 dark:text-zinc-400 truncate italic">
+                          <p className="font-serif text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate italic">
                             {song.artist} • {song.album || "Single"}
                           </p>
                         </div>
@@ -412,13 +426,13 @@ export default function AdminDashboard({
                       <div className="mt-3.5 flex gap-2.5">
                         <button
                           onClick={() => onUpdateComplaintStatus(ticket.id, "resolved")}
-                          className="flex h-7 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-white hover:bg-red-700 cursor-pointer"
+                          className="flex h-7 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white hover:bg-red-700 cursor-pointer"
                         >
                           <Check className="h-3 w-3" /> Resolve (Remove Content)
                         </button>
                         <button
                           onClick={() => onUpdateComplaintStatus(ticket.id, "dismissed")}
-                          className="flex h-7 items-center gap-1.5 rounded-none bg-zinc-150 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 cursor-pointer"
+                          className="flex h-7 items-center gap-1.5 rounded-none bg-zinc-150 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 cursor-pointer"
                         >
                           <X className="h-3 w-3" /> Dismiss Ticket
                         </button>
@@ -462,7 +476,7 @@ export default function AdminDashboard({
                 <button
                   type="submit"
                   disabled={isUploadingBanner || !newBannerImage}
-                  className="bg-zinc-900 text-white font-mono text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                  className="bg-zinc-900 text-white font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
                 >
                   {isUploadingBanner ? "Uploading..." : "Add Banner"}
                 </button>
@@ -489,7 +503,7 @@ export default function AdminDashboard({
                       </div>
                       <button
                         onClick={() => onDeleteBanner(banner.id)}
-                        className="text-red-600 hover:text-red-700 font-mono text-[10px] font-bold uppercase tracking-widest"
+                        className="text-red-600 hover:text-red-700 font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest"
                       >
                         Delete
                       </button>
@@ -503,6 +517,65 @@ export default function AdminDashboard({
       </div>
 
       {/* EDIT SONG MODAL/FORM OVERLAY */}
+      {activeTab === "applications" && (
+        <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm dark:border-zinc-850 dark:bg-zinc-950">
+          <h3 className="font-serif text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+            Creator Applications
+          </h3>
+          {creatorApplications.length === 0 ? (
+            <p className="font-serif text-xs italic text-zinc-400 py-4 text-center">No applications filed currently.</p>
+          ) : (
+            <div className="space-y-4">
+              {creatorApplications.map((app) => (
+                <div
+                  key={app.id}
+                  className="flex flex-col gap-3 rounded-none border border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-900 dark:bg-zinc-900/20"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-serif text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                        {app.artistName}
+                      </p>
+                      <p className="font-sans text-[11px] md:text-[10px] text-zinc-500">
+                        Applied: {new Date(app.createdAt).toLocaleString()} • User: {app.userEmail}
+                      </p>
+                      <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+                        <p><strong>Links:</strong> {app.links}</p>
+                        <p><strong>Description:</strong> {app.description}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex px-2 py-1 font-mono text-[8px] font-bold uppercase tracking-widest ${
+                      app.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                      app.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                      "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                    }`}>
+                      {app.status}
+                    </span>
+                  </div>
+
+                  {app.status === "pending" && onUpdateApplicationStatus && (
+                    <div className="flex justify-end gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                      <button
+                        onClick={() => onUpdateApplicationStatus(app.id, "approved")}
+                        className="px-4 py-1.5 bg-green-600 text-white font-sans text-xs font-bold rounded-none hover:bg-green-700 cursor-pointer"
+                      >
+                        Approve (Grant Artist Role)
+                      </button>
+                      <button
+                        onClick={() => onUpdateApplicationStatus(app.id, "rejected")}
+                        className="px-4 py-1.5 border border-red-200 text-red-600 font-sans text-xs font-bold rounded-none hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-900/10 cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <AnimatePresence>
         {editingSong && (
           <>
@@ -581,13 +654,13 @@ export default function AdminDashboard({
                 <div className="flex gap-2.5 justify-end pt-3">
                   <button
                     onClick={() => setEditingSong(null)}
-                    className="rounded-none bg-zinc-100 px-4 py-2 font-mono text-[10px] font-bold text-zinc-650 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider cursor-pointer"
+                    className="rounded-none bg-zinc-100 px-4 py-2 font-mono text-[11px] md:text-[10px] font-bold text-zinc-650 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={saveSongEdits}
-                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-mono text-[10px] font-bold text-white hover:bg-red-700 uppercase tracking-wider cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-mono text-[11px] md:text-[10px] font-bold text-white hover:bg-red-700 uppercase tracking-wider cursor-pointer"
                   >
                     <Save className="h-3.5 w-3.5" /> Save Changes
                   </button>

@@ -12,16 +12,67 @@ import {
   X,
   Upload,
   Image as ImageIcon,
+  Trash2,
 } from "lucide-react";
 import { Song, UserProfile } from "../types";
+import BatchUploadPanel from "./BatchUploadPanel";
 import { motion, AnimatePresence } from "motion/react";
-import { saveFile, compressImage } from "../lib/indexedDbStorage";
+
+const uploadFileToServer = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error("Upload failed");
+  const data = await res.json();
+  return data.url;
+};
+
+
+const compressImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 interface AuthorPanelProps {
   userProfile: UserProfile | null;
   songs: Song[];
   onUploadSong: (songData: Omit<Song, "id" | "listensCount" | "likesCount" | "uploadedBy" | "authorName" | "status" | "createdAt">) => Promise<string>;
   onEditSong: (songId: string, updatedFields: Partial<Song>) => Promise<void>;
+  onDeleteSong: (songId: string) => Promise<void>;
 }
 
 export default function AuthorPanel({
@@ -29,8 +80,9 @@ export default function AuthorPanel({
   songs,
   onUploadSong,
   onEditSong,
+  onDeleteSong,
 }: AuthorPanelProps) {
-  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"none" | "single" | "batch">("none");
   const [editingSong, setEditingSong] = useState<Song | null>(null);
 
   // Filter songs uploaded by this creator
@@ -92,7 +144,7 @@ export default function AuthorPanel({
     }
   };
 
-  const handleUploadSubmit = async (e: React.FormEvent) => {
+    const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -117,11 +169,15 @@ export default function AuthorPanel({
         .filter((a) => a !== "");
 
       let finalAudioUrl = audioUrl;
-      let finalCoverUrl = coverPreview || coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400";
+      let finalCoverUrl = coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400";
 
-      // If cover image is provided, compress it to base64
+      if (audioFile) {
+        finalAudioUrl = await uploadFileToServer(audioFile);
+      }
       if (coverFile) {
-        finalCoverUrl = await compressImage(coverFile);
+        finalCoverUrl = await uploadFileToServer(coverFile);
+      } else if (coverPreview && !coverPreview.startsWith('data:')) {
+         finalCoverUrl = coverPreview;
       }
 
       // Call parent creator to upload and return the new song's ID
@@ -137,11 +193,6 @@ export default function AuthorPanel({
         tags: tagsArray,
       });
 
-      // Upload audio file to IndexedDB if provided
-      if (audioFile) {
-        await saveFile(songId, "audio", audioFile);
-      }
-
       // Clear states
       setTitle("");
       setAlbum("");
@@ -153,37 +204,40 @@ export default function AuthorPanel({
       setGenres("");
       setTags("");
       setLyrics("");
-      setShowUploadForm(false);
-    } catch (err) {
-      setError("Submission failed. Check your network or permissions.");
-      console.error(err);
+      setUploadMode("none");
+    } catch (err: any) {
+      setError(err.message || "Upload failed");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
+    const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSong) return;
 
     setSubmitting(true);
     try {
-      let finalCover = editCoverPreview || editCoverUrl;
+      let finalCover = editCoverUrl;
+      let finalAudio = editingSong.audioUrl;
 
+      if (editCoverFile) {
+        finalCover = await uploadFileToServer(editCoverFile);
+      } else if (editCoverPreview && !editCoverPreview.startsWith('data:')) {
+        finalCover = editCoverPreview;
+      }
+
+      if (editAudioFile) {
+         finalAudio = await uploadFileToServer(editAudioFile);
+      }
+      
       await onEditSong(editingSong.id, {
         title: editTitle,
         album: editAlbum,
         lyrics: editLyrics,
         coverUrl: finalCover,
+        audioUrl: finalAudio,
       });
-
-      // Secure save new assets in IndexedDB
-      if (editAudioFile) {
-        await saveFile(editingSong.id, "audio", editAudioFile);
-      }
-      if (editCoverFile) {
-        await saveFile(editingSong.id, "image", editCoverFile);
-      }
 
       setEditingSong(null);
       setEditAudioFile(null);
@@ -219,13 +273,21 @@ export default function AuthorPanel({
             Upload original tracks, synchronize lyric lines, and monitor your submission approvals.
           </p>
         </div>
-        {!showUploadForm && (
-          <button
-            onClick={() => setShowUploadForm(true)}
-            className="flex h-10 items-center gap-1.5 rounded-none bg-red-600 px-5 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-transform active:scale-95"
-          >
-            <Plus className="h-4.5 w-4.5" /> Upload New Track
-          </button>
+        {uploadMode === "none" && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setUploadMode("single")}
+              className="flex h-10 items-center gap-1.5 rounded-none bg-red-600 px-5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-transform active:scale-95"
+            >
+              <Plus className="h-4.5 w-4.5" /> Single Track
+            </button>
+            <button
+              onClick={() => setUploadMode("batch")}
+              className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-900 px-5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-transform active:scale-95"
+            >
+              <Upload className="h-4.5 w-4.5" /> Batch ZIP
+            </button>
+          </div>
         )}
       </div>
 
@@ -233,14 +295,14 @@ export default function AuthorPanel({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
         {/* Upload Form / Edit Form */}
         <div className="lg:col-span-2 space-y-6">
-          {showUploadForm && (
+          {uploadMode === "single" && (
             <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm dark:border-zinc-850 dark:bg-zinc-950">
               <div className="flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-900 mb-4">
                 <h3 className="font-serif text-base font-bold italic text-zinc-900 dark:text-zinc-100">
                   Submit Song for Verification
                 </h3>
                 <button
-                  onClick={() => setShowUploadForm(false)}
+                  onClick={() => setUploadMode("none")}
                   className="rounded-none p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-850"
                 >
                   <X className="h-4.5 w-4.5" />
@@ -470,7 +532,7 @@ export default function AuthorPanel({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? "Submitting Track..." : "Submit to Verification Review Queue"}
                 </button>
@@ -644,13 +706,13 @@ export default function AuthorPanel({
                   <button
                     type="button"
                     onClick={() => setEditingSong(null)}
-                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-xs font-bold text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider text-[10px]"
+                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-xs font-bold text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider text-[11px] md:text-[10px]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-sans text-xs font-bold text-white hover:bg-red-700 uppercase tracking-wider text-[10px]"
+                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-sans text-xs font-bold text-white hover:bg-red-700 uppercase tracking-wider text-[11px] md:text-[10px]"
                   >
                     <Save className="h-3.5 w-3.5" /> Save Changes
                   </button>
@@ -659,7 +721,19 @@ export default function AuthorPanel({
             </div>
           )}
 
-          {!showUploadForm && !editingSong && (
+          {uploadMode === "batch" && (
+            <div className="relative">
+              <button 
+                onClick={() => setUploadMode("none")}
+                className="absolute -top-3 -right-3 z-10 flex h-8 w-8 items-center justify-center rounded-none bg-zinc-200 text-zinc-500 hover:bg-zinc-300 hover:text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors shadow-lg"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <BatchUploadPanel authorId={userProfile?.uid || ""} authorName={userProfile?.displayName || ""} authorRole={userProfile?.role || "user"} />
+            </div>
+          )}
+
+          {uploadMode === "none" && !editingSong && (
             <div className="rounded-none border border-dashed border-zinc-200 bg-zinc-50/50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-950/20">
               <Music className="mx-auto h-12 w-12 text-red-500/40 animate-bounce" />
               <h3 className="mt-4 font-serif text-base font-bold text-zinc-900 dark:text-zinc-200">
@@ -668,19 +742,27 @@ export default function AuthorPanel({
               <p className="mx-auto mt-1 max-w-sm font-serif text-xs italic text-zinc-500 dark:text-zinc-400">
                 Submit your songs with lyrics, artwork, and streaming links. We'll synchronize the lyric lines automatically for listeners!
               </p>
-              <button
-                onClick={() => setShowUploadForm(true)}
-                className="mt-5 rounded-none bg-red-600 px-5 py-2 font-sans text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-red-700 cursor-pointer"
-              >
-                Launch Submission Wizard
-              </button>
+              <div className="flex justify-center gap-2 mt-5">
+                <button
+                  onClick={() => setUploadMode("single")}
+                  className="rounded-none bg-red-600 px-5 py-2 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-red-700 cursor-pointer"
+                >
+                  Single Track
+                </button>
+                <button
+                  onClick={() => setUploadMode("batch")}
+                  className="rounded-none bg-zinc-900 px-5 py-2 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
+                >
+                  Batch ZIP
+                </button>
+              </div>
             </div>
           )}
         </div>
 
         {/* My Submissions List side column */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm dark:border-zinc-850 dark:bg-zinc-950">
-          <h3 className="font-mono text-[10px] font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-widest mb-4">
+          <h3 className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-widest mb-4">
             My Upload Catalog ({mySongs.length})
           </h3>
 
@@ -723,13 +805,26 @@ export default function AuthorPanel({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => startEditing(song)}
-                    className="rounded-none p-1 text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-zinc-200 cursor-pointer"
-                    title="Edit lyrics or details"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => startEditing(song)}
+                      className="rounded-none p-1 text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-zinc-200 cursor-pointer"
+                      title="Edit lyrics or details"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to delete "${song.title}"?`)) {
+                          await onDeleteSong(song.id);
+                        }
+                      }}
+                      className="rounded-none p-1 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 cursor-pointer"
+                      title="Delete song"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

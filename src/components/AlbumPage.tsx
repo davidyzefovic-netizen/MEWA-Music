@@ -7,7 +7,7 @@ interface AlbumPageProps {
   songs: Song[];
   userProfile: UserProfile | null;
   onBack: () => void;
-  onPlaySong: (song: Song) => void;
+  onPlaySong: (song: Song, contextQueue?: Song[]) => void;
   onUpdateAlbum: (albumId: string, updatedFields: Partial<Album>) => Promise<void>;
   onDeleteAlbum: (albumId: string) => Promise<void>;
   onUpdateSongDetails: (songId: string, fields: Partial<Song>) => Promise<void>;
@@ -74,14 +74,14 @@ export default function AlbumPage({
           <img
             src={album.coverUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200"}
             alt={album.title}
-            className="w-full h-full object-cover opacity-40 blur-2xl scale-110 saturate-150"
+            className="w-full h-full object-cover opacity-40 blur-xl scale-105 md:blur-2xl md:scale-110 md:saturate-150"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
         </div>
 
         <button
           onClick={onBack}
-          className="absolute top-6 left-6 flex h-8.5 items-center gap-1.5 rounded-none bg-black/45 px-3.5 font-sans text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm border border-white/10 hover:bg-black/70 transition-colors cursor-pointer z-20"
+          className="absolute top-6 left-6 flex h-8.5 items-center gap-1.5 rounded-none bg-black/45 px-3.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white md:backdrop-blur-sm border border-white/10 hover:bg-black/70 transition-colors cursor-pointer z-20"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </button>
@@ -91,14 +91,14 @@ export default function AlbumPage({
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex h-8.5 items-center gap-1.5 rounded-none bg-zinc-800 px-3.5 font-sans text-[10px] font-bold uppercase tracking-wider text-white hover:bg-zinc-700 transition-colors cursor-pointer"
+                className="flex h-8.5 items-center gap-1.5 rounded-none bg-zinc-800 px-3.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-zinc-700 transition-colors cursor-pointer"
               >
                 <Edit3 className="h-3.5 w-3.5" /> Edit Album
               </button>
             )}
             <button
               onClick={handleDelete}
-              className="flex h-8.5 items-center gap-1.5 rounded-none bg-red-600 px-3.5 font-sans text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700 transition-colors cursor-pointer"
+              className="flex h-8.5 items-center gap-1.5 rounded-none bg-red-600 px-3.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700 transition-colors cursor-pointer"
             >
               <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
@@ -167,7 +167,7 @@ export default function AlbumPage({
                       </button>
                     )}
                     <button
-                      onClick={() => onPlaySong(song)}
+                      onClick={() => onPlaySong(song, albumSongs)}
                       className="flex h-8 w-8 items-center justify-center bg-zinc-100 border border-zinc-200 text-zinc-700 hover:bg-red-600 hover:text-white dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-red-600 transition-all rounded-full shrink-0"
                     >
                       <Play className="h-3.5 w-3.5 fill-current ml-0.5" />

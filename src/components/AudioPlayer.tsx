@@ -16,10 +16,10 @@ import { Repeat, Repeat1, Shuffle, ListMusic, X,
   Music,
   Maximize2,
   Minimize2,
+  PanelBottom,
 } from "lucide-react";
 import { Song, Playlist, UserProfile } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { getFileUrl } from "../lib/indexedDbStorage";
 
 interface AudioPlayerProps {
   playbackMode?: "normal" | "loop" | "loop-one" | "shuffle";
@@ -75,10 +75,16 @@ export default function AudioPlayer({
 }: AudioPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [previousVolume, setPreviousVolume] = useState(1);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
   const [isFullScreenLyrics, setIsFullScreenLyrics] = useState(false);
+  const [isInlineControls, setIsInlineControls] = useState(false);
   const [showPlaylistsMenu, setShowPlaylistsMenu] = useState(false);
   const [parsedLyrics, setParsedLyrics] = useState<LyricLine[]>([]);
   const [activeLineIndex, setActiveLineIndex] = useState(-1);
@@ -131,10 +137,9 @@ export default function AudioPlayer({
 
     let active = true;
     const loadAudio = async () => {
-      const localUrl = await getFileUrl(currentSong.id, "audio");
       if (!active) return;
 
-      audio.src = localUrl || currentSong.audioUrl || "";
+      audio.src = currentSong.audioUrl || "";
       audio.load();
 
       if (isPlaying) {
@@ -147,7 +152,8 @@ export default function AudioPlayer({
 
     loadAudio();
 
-    return () => {
+  
+  return () => {
       active = false;
     };
   }, [currentSong]);
@@ -266,153 +272,11 @@ export default function AudioPlayer({
   const isFavorited = favorites.includes(currentSong.id);
   const isDownloaded = downloadedSongs.includes(currentSong.id);
 
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white/95 border-t border-zinc-200/80 shadow-2xl transition-colors dark:border-zinc-800 dark:bg-zinc-950/95 backdrop-blur-lg">
-      <audio
-        ref={audioRef}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleAudioEnded}
-      />
+  const isControlsInline = showLyrics && isFullScreenLyrics && isInlineControls;
 
-      {/* Expanded Synced Lyrics Panel */}
-      <AnimatePresence>
-        {showLyrics && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: isFullScreenLyrics ? "calc(100dvh - 5rem)" : "450px", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className={`relative w-full flex flex-col md:flex-row bg-zinc-950 overflow-hidden border-b border-white/5 transition-all duration-500 ease-in-out`}
-          >
-            {/* Blurred background image layer */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-               <img
-                  src={
-                    currentSong.coverUrl ||
-                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
-                  }
-                  alt="bg"
-                  className="w-full h-full object-cover opacity-30 blur-3xl saturate-[1.5]"
-               />
-               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/40 mix-blend-multiply" />
-            </div>
-
-            {/* Top right actions */}
-            <div className="absolute top-4 right-4 md:top-6 md:right-6 z-30 flex items-center gap-2 md:gap-3">
-               <button
-                 onClick={() => setIsFullScreenLyrics(!isFullScreenLyrics)}
-                 className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-none bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors"
-                 title={isFullScreenLyrics ? "Exit Fullscreen" : "Fullscreen Lyrics"}
-               >
-                 {isFullScreenLyrics ? <Minimize2 className="h-4 w-4 md:h-5 md:w-5" /> : <Maximize2 className="h-4 w-4 md:h-5 md:w-5" />}
-               </button>
-               <button
-                  onClick={() => setShowLyrics(false)}
-                  className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-none bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors cursor-pointer"
-                  title="Close Lyrics"
-                >
-                  <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />
-                </button>
-            </div>
-
-            {/* Left Cover area */}
-            <div className="relative z-10 hidden md:flex w-1/2 p-8 flex-col items-center justify-center border-r border-white/5">
-                <img
-                  src={
-                    currentSong.coverUrl ||
-                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
-                  }
-                  alt={currentSong.title}
-                  className="w-64 h-64 object-cover rounded-md shadow-2xl ring-1 ring-white/10"
-                />
-                <div className="w-full max-w-sm mt-6 text-center">
-                  <h3 className="font-serif text-3xl font-black text-white truncate drop-shadow-md pb-1">
-                    {currentSong.title}
-                  </h3>
-                  <p className="font-sans text-lg text-zinc-300 font-bold uppercase tracking-widest truncate">
-                    {currentSong.artist}
-                    {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
-                      <span className="opacity-80 lowercase text-sm ml-1">feat. {currentSong.featuredArtists.join(", ")}</span>
-                    )}
-                  </p>
-                </div>
-            </div>
-
-            {/* Right Lyrics area */}
-            <div className="relative z-10 w-full md:w-1/2 flex flex-col pt-8 pb-8 px-6 md:px-12 h-full">
-              {parsedLyrics.length > 0 ? (
-                <div
-                  className="flex-1 overflow-y-auto no-scrollbar mask-image-fade"
-                  ref={lyricsContainerRef}
-                >
-                  <div className="pb-[20vh] pt-10">
-                    {parsedLyrics.map((line, idx) => {
-                      const isActive = activeLineIndex === idx;
-                      return (
-                        <p
-                          key={idx}
-                          className={`my-5 font-serif text-2xl sm:text-3xl font-black transition-all duration-500 cursor-pointer ${
-                            isActive
-                              ? "text-white scale-[1.02] transform origin-left drop-shadow-md"
-                              : "text-white/40 hover:text-white/70"
-                          }`}
-                          onClick={() => {
-                            if (audioRef.current && line.time >= 0) {
-                              audioRef.current.currentTime = line.time;
-                            }
-                          }}
-                        >
-                          {line.text}
-                        </p>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-zinc-400">
-                  <Mic2 className="h-12 w-12 mb-4 opacity-50" />
-                  <p className="font-serif text-xl italic">No synced lyrics available.</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Player Row */}
-      <div className="flex h-20 items-center justify-between px-6">
-        {/* Left: Song Meta */}
-        <div className="flex w-1/4 items-center gap-3">
-          <div className="relative group shrink-0">
-            <img
-              src={
-                currentSong.coverUrl ||
-                "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
-              }
-              alt={currentSong.title}
-              className="h-12 w-12 rounded-none object-cover border border-zinc-200 dark:border-zinc-850 shadow-sm"
-            />
-            {isDownloaded && (
-              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-none bg-red-600 text-white border-2 border-white dark:border-zinc-950" title="Available Offline">
-                <Download className="h-2.5 w-2.5" />
-              </span>
-            )}
-          </div>
-          <div className="overflow-hidden">
-            <h4 className="font-serif text-sm font-black italic tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
-              {currentSong.title}
-            </h4>
-            <p className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-              {currentSong.artist}
-              {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
-                <span className="opacity-80"> feat. {currentSong.featuredArtists.join(", ")}</span>
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Controls & Seek */}
-        <div className="flex flex-1 flex-col items-center max-w-lg">
+  const renderCenterControls = () => (
+    <div className={isControlsInline ? "flex flex-col items-center w-full max-w-md" : "flex flex-1 flex-col items-center max-w-lg"}>
+      
           {/* Action Row */}
           <div className="flex items-center gap-3 sm:gap-5">
             <button
@@ -468,7 +332,7 @@ export default function AudioPlayer({
 
           {/* Seek Bar */}
           <div className="mt-1 flex w-full items-center gap-3">
-            <span className="font-mono text-[10px] text-zinc-400 w-8 text-right">
+            <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-right">
               {formatTime(currentTime)}
             </span>
             <input
@@ -479,14 +343,17 @@ export default function AudioPlayer({
               onChange={handleSeekChange}
               className="h-1 w-full cursor-pointer appearance-none rounded-none bg-zinc-200 dark:bg-zinc-800 accent-red-600"
             />
-            <span className="font-mono text-[10px] text-zinc-400 w-8 text-left">
+            <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-left">
               {formatTime(duration)}
             </span>
           </div>
-        </div>
+        
+    </div>
+  );
 
-        {/* Right: Auxiliary Actions */}
-        <div className="flex w-1/4 items-center justify-end gap-3.5">
+  const renderRightActions = () => (
+    <div className={isControlsInline ? "flex items-center justify-center gap-6 w-full max-w-md mt-4" : "flex w-1/4 items-center justify-end gap-3.5"}>
+      
           {/* Queue Menu */}
           <div className="relative">
             <button
@@ -515,10 +382,10 @@ export default function AudioPlayer({
                     className="absolute bottom-10 right-0 z-40 w-80 rounded-none border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 flex flex-col"
                   >
                     <div className="flex items-center justify-between px-2 py-1 mb-2">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      <p className="font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                         Up Next
                       </p>
-                      <span className="font-mono text-[10px] text-zinc-400">
+                      <span className="font-mono text-[11px] md:text-[10px] text-zinc-400">
                         {queue.length} songs
                       </span>
                     </div>
@@ -587,7 +454,14 @@ export default function AudioPlayer({
 
           {/* Lyrics Sync Switch */}
           <button
-            onClick={() => setShowLyrics(!showLyrics)}
+            onClick={() => {
+              if (showLyrics) {
+                setShowLyrics(false);
+                setIsFullScreenLyrics(false);
+              } else {
+                setShowLyrics(true);
+              }
+            }}
             className={`flex h-8 w-8 items-center justify-center rounded-none transition-all ${
               showLyrics
                 ? "bg-red-500/10 text-red-500"
@@ -638,7 +512,7 @@ export default function AudioPlayer({
                     </p>
                     <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5">
                       {playlists.length === 0 ? (
-                        <p className="px-2 py-1 font-sans text-[10px] text-zinc-400 italic">
+                        <p className="px-2 py-1 font-sans text-[11px] md:text-[10px] text-zinc-400 italic">
                           No custom playlists
                         </p>
                       ) : (
@@ -696,8 +570,350 @@ export default function AudioPlayer({
               className="h-1 w-16 cursor-pointer appearance-none rounded-none bg-zinc-200 dark:bg-zinc-800 accent-red-600"
             />
           </div>
+        
+    </div>
+  );
+
+
+  return (
+    <motion.div layout transition={{ type: "spring", damping: 25, stiffness: 200 }} className={`fixed ${showLyrics ? 'top-0 bottom-0 z-[60]' : 'bottom-[calc(4rem+env(safe-area-inset-bottom))]'} md:top-auto md:bottom-0 left-0 right-0 z-50 flex flex-col bg-white/95 border-t border-zinc-200/80 shadow-2xl transition-colors dark:border-zinc-800 dark:bg-zinc-950/95 md:backdrop-blur-lg`}>
+      <audio
+        ref={audioRef}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleAudioEnded}
+      />
+
+      {/* Expanded Synced Lyrics Panel */}
+      <AnimatePresence>
+        {showLyrics && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ 
+              height: typeof window !== "undefined" && window.innerWidth < 768 
+                ? "100%" 
+                : (isFullScreenLyrics ? (isControlsInline ? "100dvh" : "calc(100dvh - 5rem)") : "450px"), 
+              opacity: 1 
+            }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className={`relative w-full flex flex-col md:flex-row bg-zinc-950 overflow-hidden border-b border-white/5`}
+            onTouchStart={(e) => {
+              setTouchEndX(null);
+              setTouchEndY(null);
+              setTouchStartX(e.targetTouches[0].clientX);
+              setTouchStartY(e.targetTouches[0].clientY);
+            }}
+            onTouchMove={(e) => {
+              setTouchEndX(e.targetTouches[0].clientX);
+              setTouchEndY(e.targetTouches[0].clientY);
+            }}
+            onTouchEnd={() => {
+              if (touchStartX === null || touchEndX === null || touchStartY === null || touchEndY === null) return;
+              const distanceX = touchStartX - touchEndX;
+              const distanceY = touchStartY - touchEndY;
+              const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+              const minSwipeDistance = 50;
+              
+              if (isHorizontalSwipe) {
+                if (distanceX > minSwipeDistance) {
+                  onNext();
+                } else if (distanceX < -minSwipeDistance) {
+                  onPrev();
+                }
+              }
+            }}
+          >
+            {/* Blurred background image layer */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+               <img
+                  src={
+                    currentSong.coverUrl ||
+                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
+                  }
+                  alt="bg"
+                  className="w-full h-full object-cover opacity-20 blur-2xl md:opacity-30 md:blur-3xl md:saturate-[1.5]"
+               />
+               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/40 mix-blend-multiply" />
+            </div>
+
+            {/* Top right actions */}
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[70] flex items-center gap-2 md:gap-3">
+               {isFullScreenLyrics && (
+                 <button
+                   onClick={() => setIsInlineControls(!isInlineControls)}
+                   className="hidden md:flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-none bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors"
+                   title={isInlineControls ? "Move Controls to Bottom" : "Move Controls to Center"}
+                 >
+                   <PanelBottom className={`h-4 w-4 md:h-5 md:w-5 ${!isInlineControls ? "opacity-50" : ""}`} />
+                 </button>
+               )}
+               <button
+                 onClick={() => setIsFullScreenLyrics(!isFullScreenLyrics)}
+                 className="hidden md:flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-none bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors"
+                 title={isFullScreenLyrics ? "Exit Fullscreen" : "Fullscreen Lyrics"}
+               >
+                 {isFullScreenLyrics ? <Minimize2 className="h-4 w-4 md:h-5 md:w-5" /> : <Maximize2 className="h-4 w-4 md:h-5 md:w-5" />}
+               </button>
+               <button
+                  onClick={() => {
+                  setShowLyrics(false);
+                  setIsFullScreenLyrics(false);
+                }}
+                  className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-none bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors cursor-pointer"
+                  title="Close Lyrics"
+                >
+                  <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />
+                </button>
+            </div>
+
+            {/* Left Cover area */}
+            <div className="relative z-10 hidden md:flex w-1/2 p-8 flex-col items-center justify-center border-r border-white/5">
+                <img
+                  src={
+                    currentSong.coverUrl ||
+                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
+                  }
+                  alt={currentSong.title}
+                  className="w-64 h-64 object-cover rounded-md shadow-2xl ring-1 ring-white/10"
+                />
+                <div className="w-full max-w-sm mt-6 text-center">
+                  <h3 className="font-serif text-3xl font-black text-white truncate drop-shadow-md pb-1">
+                    {currentSong.title}
+                  </h3>
+                  <p className="font-sans text-lg text-zinc-300 font-bold uppercase tracking-widest truncate">
+                    {currentSong.artist}
+                    {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
+                      <span className="opacity-80 lowercase text-sm ml-1">feat. {currentSong.featuredArtists.join(", ")}</span>
+                    )}
+                  </p>
+                </div>
+                {isControlsInline && (
+                  <div className="w-full mt-10 flex flex-col items-center">
+                    {renderCenterControls()}
+                    {renderRightActions()}
+                  </div>
+                )}
+            </div>
+
+            {/* Right Lyrics area (Desktop) */}
+            <div className="relative z-10 hidden md:flex w-1/2 flex-col pt-8 pb-8 px-6 md:px-12 h-full">
+              {parsedLyrics.length > 0 ? (
+                <div
+                  className="flex-1 overflow-y-auto no-scrollbar mask-image-fade"
+                  ref={lyricsContainerRef}
+                >
+                  <div className="pb-[20vh] pt-10">
+                    {parsedLyrics.map((line, idx) => {
+                      const isActive = activeLineIndex === idx;
+                      return (
+                        <p
+                          key={idx}
+                          className={`my-4 font-serif text-lg sm:text-xl font-bold transition-all duration-300 cursor-pointer ${
+                            isActive
+                              ? "text-white scale-[1.02] transform origin-left drop-shadow-md"
+                              : "text-white/40 hover:text-white/70"
+                          }`}
+                          onClick={() => {
+                            if (audioRef.current && line.time >= 0) {
+                              audioRef.current.currentTime = line.time;
+                            }
+                          }}
+                        >
+                          {line.text}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-zinc-400">
+                  <Mic2 className="h-12 w-12 mb-4 opacity-50" />
+                  <p className="font-serif text-xl italic">No synced lyrics available.</p>
+                </div>
+              )}
+            </div>
+
+            
+            
+            {/* Mobile Full Player area */}
+            <div className="relative z-10 flex md:hidden w-full flex-col p-6 pt-16 h-full justify-between pb-10 overflow-y-auto no-scrollbar">
+                
+                
+                <div className="flex flex-col items-center flex-1 justify-center min-h-[300px] overflow-hidden w-full relative">
+                  <AnimatePresence mode="wait">
+                   <motion.div
+                     key={currentSong.id}
+                     initial={{ opacity: 0, x: 50, scale: 0.95 }}
+                     animate={{ opacity: 1, x: 0, scale: 1 }}
+                     exit={{ opacity: 0, x: -50, scale: 0.95 }}
+                     transition={{ duration: 0.3, ease: "easeOut" }}
+                     className="w-full flex flex-col items-center"
+                   >
+                     <img
+                       src={currentSong.coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"}
+                       alt={currentSong.title}
+                       className="w-full aspect-square max-w-[220px] object-cover rounded-[2rem] shadow-2xl ring-1 ring-white/10"
+                     />
+                     <div className="w-full mt-8 text-center px-4">
+                       <h3 className="font-serif text-3xl font-black text-white truncate drop-shadow-md pb-1">
+                         {currentSong.title}
+                       </h3>
+                       <p className="font-sans text-base text-zinc-300 font-medium tracking-wide truncate">
+                         {currentSong.artist}
+                         {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
+                           <span className="opacity-80 text-sm ml-1">feat. {currentSong.featuredArtists.join(", ")}</span>
+                         )}
+                       </p>
+                     </div>
+                   </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <div className="flex flex-col items-center w-full mt-4">
+                  {/* Progress Bar */}
+                  <div className="w-full max-w-[320px] flex items-center gap-3 mb-8">
+                    <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-right">{formatTime(currentTime)}</span>
+                    <div className="relative flex-1 flex items-center h-4 group">
+                        <input
+                        type="range"
+                        min={0}
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={handleSeekChange}
+                        className="absolute inset-0 w-full h-1 my-auto cursor-pointer appearance-none rounded-full bg-zinc-700/50 accent-white"
+                        style={{ zIndex: 10 }}
+                        />
+                    </div>
+                    <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-left">{formatTime(duration)}</span>
+                  </div>
+                  
+                  {/* Controls Row */}
+                  <div className="flex items-center justify-between w-full max-w-[320px] mb-8">
+                    <button onClick={() => setPlaybackMode && setPlaybackMode(playbackMode === "shuffle" ? "normal" : "shuffle")} className={`p-2 transition-colors ${playbackMode === "shuffle" ? "text-red-500" : "text-zinc-400 hover:text-white"}`}>
+                      <Shuffle className="h-5 w-5" />
+                    </button>
+                    <button onClick={onPrev} className="p-4 -m-2 text-white active:text-zinc-300 transition-colors">
+                      <SkipBack className="h-8 w-8 fill-current" />
+                    </button>
+                    <button onClick={() => setIsPlaying(!isPlaying)} className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-105 active:scale-95">
+                      {isPlaying ? <Pause className="h-8 w-8 fill-current" /> : <Play className="h-8 w-8 fill-current ml-1" />}
+                    </button>
+                    <button onClick={onNext} className="p-4 -m-2 text-white active:text-zinc-300 transition-colors">
+                      <SkipForward className="h-8 w-8 fill-current" />
+                    </button>
+                    <button onClick={() => {
+                        if (!setPlaybackMode) return;
+                        if (playbackMode === "normal" || playbackMode === "shuffle") setPlaybackMode("loop");
+                        else if (playbackMode === "loop") setPlaybackMode("loop-one");
+                        else setPlaybackMode("normal");
+                      }} className={`p-2 transition-colors ${playbackMode === "loop" || playbackMode === "loop-one" ? "text-red-500" : "text-zinc-400 hover:text-white"}`}>
+                      {playbackMode === "loop-one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
+                    </button>
+                  </div>
+
+                  {/* Volume Bar */}
+                  <div className="w-full max-w-[320px] flex items-center gap-3">
+                    <button onClick={() => {
+                        if (volume > 0) { setPreviousVolume(volume); handleVolumeChange({ target: { value: 0 } } as any); }
+                        else { handleVolumeChange({ target: { value: previousVolume || 1 } } as any); }
+                      }} className="text-zinc-400 hover:text-white transition-colors">
+                      {volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                    </button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-700/50 accent-white"
+                    />
+                  </div>
+                </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Player Row (visible < md) */}
+      <div className={`${showLyrics || isControlsInline ? 'hidden' : 'flex md:hidden'} flex-col w-full relative`}>
+        {/* Top Progress Bar */}
+        <input
+           type="range"
+           min={0}
+           max={duration || 100}
+           value={currentTime}
+           onChange={handleSeekChange}
+           className="absolute top-0 left-0 w-full h-[2px] -mt-[1px] cursor-pointer appearance-none bg-zinc-200 dark:bg-zinc-800 accent-red-600 z-10"
+        />
+        <div className="flex h-14 items-center justify-between px-3">
+           {/* Left: Cover & Info */}
+           <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={() => {
+              setShowLyrics(true);
+           }}>
+             <img src={currentSong.coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} alt="cover" className="h-10 w-10 object-cover shrink-0 rounded-none border border-zinc-200 dark:border-zinc-850" />
+             <div className="flex flex-col overflow-hidden min-w-0 pr-2 text-left">
+               <span className="font-serif text-sm font-black italic tracking-tight text-zinc-900 dark:text-zinc-100 truncate">{currentSong.title}</span>
+               <span className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{currentSong.artist}</span>
+             </div>
+           </div>
+
+           {/* Controls */}
+           <div className="flex items-center gap-2 shrink-0 pr-1">
+              <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="p-3 -m-1 text-zinc-600 dark:text-zinc-400 active:text-zinc-900 dark:active:text-white">
+                 <SkipBack className="h-4 w-4" fill="currentColor" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="p-3 -m-1 text-zinc-900 dark:text-white">
+                 {isPlaying ? <Pause className="h-5 w-5" fill="currentColor" /> : <Play className="h-5 w-5" fill="currentColor" />}
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="p-3 -m-1 text-zinc-600 dark:text-zinc-400 active:text-zinc-900 dark:active:text-white">
+                 <SkipForward className="h-4 w-4" fill="currentColor" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); setShowLyrics(!showLyrics); }} className={`p-3 -m-1 ${showLyrics ? "text-red-500" : "text-zinc-600 dark:text-zinc-400"}`}>
+                 <ChevronUp className="h-5 w-5" />
+              </button>
+           </div>
         </div>
       </div>
-    </div>
+
+      {/* Main Player Row (Desktop) */}
+      <div className={`h-20 items-center justify-between px-6 ${isControlsInline ? 'hidden' : 'hidden md:flex'}`}>
+        {/* Left: Song Meta */}
+        <div className="flex w-1/4 items-center gap-3">
+          <div className="relative group shrink-0">
+            <img
+              src={
+                currentSong.coverUrl ||
+                "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
+              }
+              alt={currentSong.title}
+              className="h-12 w-12 rounded-none object-cover border border-zinc-200 dark:border-zinc-850 shadow-sm"
+            />
+            {isDownloaded && (
+              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-none bg-red-600 text-white border-2 border-white dark:border-zinc-950" title="Available Offline">
+                <Download className="h-2.5 w-2.5" />
+              </span>
+            )}
+          </div>
+          <div className="overflow-hidden">
+            <h4 className="font-serif text-sm font-black italic tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
+              {currentSong.title}
+            </h4>
+            <p className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+              {currentSong.artist}
+              {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
+                <span className="opacity-80"> feat. {currentSong.featuredArtists.join(", ")}</span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Center: Controls & Seek */}
+        {renderCenterControls()}
+        {/* Right: Auxiliary Actions */}
+        {renderRightActions()}
+      </div>
+    </motion.div>
   );
 }
