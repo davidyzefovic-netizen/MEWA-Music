@@ -152,12 +152,12 @@ export default function Sidebar({
                 <p className="font-serif text-[11px] font-bold text-red-950 dark:text-red-400">
                   Join the Community
                 </p>
-                <p className="mt-1 font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                <p className="mt-1 font-sans text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   Sign in to create playlists, favorite tracks, review sync lyrics, and upload songs!
                 </p>
                 <button
                   onClick={onLogin}
-                  className="mt-2.5 rounded-none bg-zinc-950 hover:bg-zinc-800 dark:bg-red-600 px-3 py-1 font-sans text-[11px] md:text-[10px] font-bold text-white shadow-sm dark:hover:bg-red-700 transition-colors"
+                  className="mt-2.5 rounded-none bg-zinc-950 hover:bg-zinc-800 dark:bg-red-600 px-3 py-1 font-sans text-[10px] font-bold text-white shadow-sm dark:hover:bg-red-700 transition-colors"
                 >
                   Sign In Now
                 </button>

@@ -417,7 +417,6 @@ export default function App() {
       await updateDoc(songDocRef, {
         listensCount: increment(1),
       });
-      setSongs(prev => prev.map(s => s.id === songId ? { ...s, listensCount: (s.listensCount || 0) + 1 } : s));
 
       // 2. Insert tracking log to listeningHistory
       const logId = `${user.uid}_${songId}_${Date.now()}`;
@@ -458,7 +457,6 @@ export default function App() {
         await updateDoc(doc(db, "songs", songId), {
           likesCount: increment(-1),
         });
-        setSongs(prev => prev.map(s => s.id === songId ? { ...s, likesCount: Math.max(0, (s.likesCount || 0) - 1) } : s));
       } else {
         await setDoc(favDocRef, {
           userId: user.uid,
@@ -469,7 +467,6 @@ export default function App() {
         await updateDoc(doc(db, "songs", songId), {
           likesCount: increment(1),
         });
-        setSongs(prev => prev.map(s => s.id === songId ? { ...s, likesCount: (s.likesCount || 0) + 1 } : s));
       }
     } catch (err) {
       console.error("Failed toggle favorite: ", err);
@@ -577,7 +574,6 @@ export default function App() {
       await updateDoc(doc(db, "songs", songId), {
         status: targetStatus,
       });
-      setSongs(prev => prev.map(s => s.id === songId ? { ...s, status: targetStatus } : s));
 
       // If approved, notify followers/favoriters of this artist/creator!
       if (targetStatus === "approved") {
@@ -620,7 +616,6 @@ export default function App() {
   const handleUpdateSongDetails = async (songId: string, updatedFields: Partial<Song>) => {
     try {
       await updateDoc(doc(db, "songs", songId), updatedFields);
-      setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...updatedFields } : s));
     } catch (err) {
       console.error(err);
     }
@@ -666,7 +661,7 @@ export default function App() {
     const status = userProfile?.role === "admin" ? "approved" : "pending";
 
     try {
-      const newSong = {
+      await setDoc(doc(db, "songs", songId), {
         ...songData,
         id: songId,
         uploadedBy: user.uid,
@@ -675,9 +670,7 @@ export default function App() {
         listensCount: 0,
         likesCount: 0,
         createdAt: new Date().toISOString(),
-      };
-      await setDoc(doc(db, "songs", songId), newSong);
-      setSongs(prev => [newSong, ...prev]);
+      });
       return songId;
     } catch (err) {
       console.error(err);
@@ -689,13 +682,11 @@ export default function App() {
   const handleCreateArtistProfile = async (artistData: Omit<ArtistProfile, "views" | "createdAt">) => {
     if (!user) throw new Error("Authentication required");
     try {
-      const newArtist = {
+      await setDoc(doc(db, "artists", artistData.id), {
         ...artistData,
         views: 0,
         createdAt: new Date().toISOString(),
-      };
-      await setDoc(doc(db, "artists", artistData.id), newArtist);
-      setArtists(prev => [newArtist, ...prev]);
+      });
     } catch (err) {
       console.error("Failed to create artist profile:", err);
       throw err;
@@ -705,7 +696,6 @@ export default function App() {
   const handleUpdateArtistProfile = async (artistId: string, updatedFields: Partial<ArtistProfile>) => {
     try {
       await updateDoc(doc(db, "artists", artistId), updatedFields);
-      setArtists(prev => prev.map(a => a.id === artistId ? { ...a, ...updatedFields } : a));
     } catch (err) {
       console.error("Failed to update artist profile:", err);
       throw err;
@@ -746,7 +736,6 @@ export default function App() {
   const handleUpdateAlbum = async (albumId: string, updatedFields: Partial<Album>) => {
     try {
       await updateDoc(doc(db, "albums", albumId), updatedFields);
-      setAlbums(prev => prev.map(a => a.id === albumId ? { ...a, ...updatedFields } : a));
     } catch (err) {
       console.error("Failed to update album:", err);
       throw err;
@@ -1075,7 +1064,7 @@ export default function App() {
                   <button
                     key={genre}
                     onClick={() => setSelectedGenre(genre)}
-                    className={`rounded-none border px-4 py-1.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    className={`rounded-none border px-4 py-1.5 font-sans text-[10px] font-bold uppercase tracking-widest transition-all ${
                       selectedGenre === genre
                         ? "bg-zinc-950 text-white border-zinc-950 dark:bg-white dark:text-zinc-950 dark:border-white"
                         : "bg-transparent text-zinc-500 border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-950"
@@ -1266,7 +1255,7 @@ export default function App() {
                           <button
                             key={genre}
                             onClick={() => handleGenrePrefToggle(genre)}
-                            className={`rounded-none border px-3.5 py-1 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            className={`rounded-none border px-3.5 py-1 font-sans text-[10px] font-bold uppercase tracking-wider transition-all ${
                               isPref
                                 ? "bg-red-600 text-white border-red-600"
                                 : "bg-transparent text-zinc-500 border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900"
@@ -1330,7 +1319,7 @@ export default function App() {
                 {user && (
                   <button
                     onClick={() => setShowCreatePlaylistModal(true)}
-                    className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-950 px-5 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm dark:bg-white dark:text-zinc-950 border border-zinc-950 dark:border-white"
+                    className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-950 px-5 font-sans text-[10px] uppercase tracking-widest font-bold text-white shadow-sm dark:bg-white dark:text-zinc-950 border border-zinc-950 dark:border-white"
                   >
                     <Plus className="h-4 w-4" /> Create Playlist
                   </button>
@@ -1371,13 +1360,13 @@ export default function App() {
 
                     {/* Offline sync toggle */}
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] md:text-[10px] uppercase tracking-wider text-zinc-500">Offline Sync:</span>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">Offline Sync:</span>
                       <button
                         onClick={() => {
                           const anyNotInLocal = selectedPlaylist.songIds.some((id) => !downloadedSongs.includes(id));
                           handleTogglePlaylistOffline(selectedPlaylist, anyNotInLocal);
                         }}
-                        className={`flex h-8 items-center gap-1.5 rounded-none px-3.5 font-sans text-[11px] md:text-[10px] uppercase tracking-wider font-bold shadow-sm transition-all ${
+                        className={`flex h-8 items-center gap-1.5 rounded-none px-3.5 font-sans text-[10px] uppercase tracking-wider font-bold shadow-sm transition-all ${
                           selectedPlaylist.songIds.every((id) => downloadedSongs.includes(id)) && selectedPlaylist.songIds.length > 0
                             ? "bg-red-600 text-white"
                             : "bg-zinc-100 text-zinc-600 dark:bg-zinc-850 dark:text-zinc-400"
@@ -1416,7 +1405,7 @@ export default function App() {
                                 <h4 className="font-serif text-xs font-bold text-zinc-900 dark:text-zinc-100">
                                   {song.title}
                                 </h4>
-                                <p className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400">
+                                <p className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400">
                                   {song.artist}
                                 </p>
                               </div>
@@ -1703,7 +1692,7 @@ export default function App() {
 
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-zinc-200 bg-white/95 dark:border-zinc-800 dark:bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] pt-2 pb-2 h-auto min-h-[4rem]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-zinc-200 bg-white/90 backdrop-blur-md pb-safe-bottom dark:border-zinc-800 dark:bg-zinc-950/90 h-16">
         {[
           { id: 'home', icon: <Home className="h-5 w-5" />, label: 'Главная' },
           { id: 'artists', icon: <Users className="h-5 w-5" />, label: 'Артисты' },
@@ -1721,7 +1710,7 @@ export default function App() {
             }`}
           >
             {item.icon}
-            <span className="font-sans text-[11px] md:text-[10px] font-semibold">{item.label}</span>
+            <span className="font-sans text-[10px] font-semibold">{item.label}</span>
           </button>
         ))}
       </div>
@@ -1775,7 +1764,7 @@ export default function App() {
               </div>
               <div className="space-y-5">
                 <div>
-                  <label className="block font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Настроение</label>
+                  <label className="block font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Настроение</label>
                   <select
                     value={myWaveMood}
                     onChange={(e) => setMyWaveMood(e.target.value as any)}
@@ -1789,7 +1778,7 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Характер треков</label>
+                  <label className="block font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Характер треков</label>
                   <select
                     value={myWaveFamiliarity}
                     onChange={(e) => setMyWaveFamiliarity(e.target.value as any)}
@@ -1915,7 +1904,7 @@ export default function App() {
                     <h5 className="font-sans text-xs font-bold text-zinc-900 dark:text-white truncate">
                       {selectedComplaintSong.title}
                     </h5>
-                    <p className="font-sans text-[11px] md:text-[10px] text-zinc-400 truncate">
+                    <p className="font-sans text-[10px] text-zinc-400 truncate">
                       By {selectedComplaintSong.artist}
                     </p>
                   </div>

@@ -277,7 +277,7 @@ export default function Header({
             {/* User Role Badge */}
             {userProfile && (
               <div
-                className={`hidden items-center gap-1 rounded-none px-2.5 py-1 font-mono text-[11px] md:text-[10px] font-semibold uppercase tracking-wider md:flex ${
+                className={`hidden items-center gap-1 rounded-none px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider md:flex ${
                   userProfile.role === "admin"
                     ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
                     : userProfile.role === "author"

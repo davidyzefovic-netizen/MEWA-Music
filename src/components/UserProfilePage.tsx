@@ -101,7 +101,7 @@ export default function UserProfilePage({
             {userProfile.email}
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-3">
-            <div className={`flex items-center gap-1.5 px-3 py-1 font-mono text-[11px] md:text-[10px] font-semibold uppercase tracking-wider ${
+            <div className={`flex items-center gap-1.5 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider ${
               userProfile.role === "admin" 
                 ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400" 
                 : userProfile.role === "author"
@@ -111,7 +111,7 @@ export default function UserProfilePage({
               <Star size={12} />
               <span>{userProfile.role}</span>
             </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1 font-mono text-[11px] md:text-[10px] uppercase tracking-wider ${
+            <div className={`flex items-center gap-1.5 px-3 py-1 font-mono text-[10px] uppercase tracking-wider ${
               darkMode ? "bg-zinc-800/50 text-zinc-400" : "bg-zinc-100/50 text-zinc-500"
             }`}>
               <Clock size={12} />
@@ -158,7 +158,7 @@ export default function UserProfilePage({
                 <h3 className={`font-serif text-lg font-bold ${darkMode ? "text-white" : "text-zinc-950"}`}>
                   {stats.topArtistName}
                 </h3>
-                <p className={`mt-0.5 font-mono text-[11px] md:text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
+                <p className={`mt-0.5 font-mono text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
                   {stats.topArtistCount} PLAYS
                 </p>
               </div>
@@ -205,7 +205,7 @@ export default function UserProfilePage({
                 <p className={`truncate mt-0.5 font-sans text-xs ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>
                   {stats.topSong.artist}
                 </p>
-                <p className={`mt-1 font-mono text-[11px] md:text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
+                <p className={`mt-1 font-mono text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
                   {stats.topSongCount} PLAYS
                 </p>
               </div>

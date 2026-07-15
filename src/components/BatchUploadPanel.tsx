@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { Upload, FileArchive, CheckCircle, AlertCircle, Loader2, Music, Image as ImageIcon } from "lucide-react";
 
-import { Users } from "lucide-react";
-
 export default function BatchUploadPanel({ authorId, authorName, authorRole, onComplete }: { authorId: string; authorName: string; authorRole: string; onComplete?: () => void }) {
-  const [uploadType, setUploadType] = useState<"songs" | "artists">("songs");
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -37,22 +34,13 @@ export default function BatchUploadPanel({ authorId, authorName, authorRole, onC
       const formData = new FormData();
       formData.append("archive", zipFile);
 
-      const endpoint = uploadType === "songs" ? "/api/upload-archive" : "/api/upload-artists-archive";
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/upload-archive", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        let errorMsg = `Upload failed with status ${response.status}`;
-        try {
-           const errData = await response.json();
-           if (errData.error) errorMsg += ": " + errData.error;
-        } catch(e) {}
-        if (response.status === 413) {
-           errorMsg += " (Payload Too Large). Настройте Nginx: client_max_body_size 100M;";
-        }
-        throw new Error(errorMsg);
+        throw new Error(`Upload failed with status ${response.status}`);
       }
 
       if (!response.body) {
@@ -102,11 +90,7 @@ export default function BatchUploadPanel({ authorId, authorName, authorRole, onC
       }
 
     } catch (error: any) {
-      if (error.message.includes('Failed to fetch')) {
-         logMessage('Ошибка: Соединение прервано (Failed to fetch). Если вы используете PM2 --watch, отключите его для папки uploads. Также проверьте Nginx (client_max_body_size).');
-      } else {
-         logMessage(`Error uploading/processing ZIP: ${error.message}`);
-      }
+      logMessage(`Error uploading/processing ZIP: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -118,32 +102,15 @@ export default function BatchUploadPanel({ authorId, authorName, authorRole, onC
         <FileArchive className="h-4 w-4" /> ZIP Server-Side Importer
       </h3>
       
-      <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 mb-4">
-        <button
-          onClick={() => { setUploadType("songs"); setZipFile(null); setLogs([]); setStats({added:0,skipped:0,errors:0}); }}
-          className={`flex-1 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${uploadType === "songs" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
-        >
-          Songs (index.json)
-        </button>
-        {authorRole === "admin" && (
-          <button
-            onClick={() => { setUploadType("artists"); setZipFile(null); setLogs([]); setStats({added:0,skipped:0,errors:0}); }}
-            className={`flex-1 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${uploadType === "artists" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
-          >
-            Artists (artists.json)
-          </button>
-        )}
-      </div>
-      
       <div className="flex flex-col gap-4">
         {/* Upload Area */}
         <div className="border border-dashed border-zinc-300 dark:border-zinc-700 p-6 flex flex-col items-center justify-center text-center bg-zinc-50 dark:bg-zinc-900/50">
           <Upload className="h-8 w-8 text-zinc-400 mb-3" />
           <p className="font-sans text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-1">
-            Upload {uploadType === "songs" ? "tracks" : "artists"} archive
+            Upload tracks archive
           </p>
           <p className="font-sans text-xs text-zinc-500 mb-4">
-            {uploadType === "songs" ? "ZIP file containing index.json and audio/cover files." : "ZIP file containing artists.json and photo files."}
+            ZIP file containing index.json and audio/cover files.
           </p>
           <input
             type="file"
@@ -202,7 +169,7 @@ export default function BatchUploadPanel({ authorId, authorName, authorRole, onC
 
         {/* Logs terminal */}
         {logs.length > 0 && (
-          <div className="mt-4 bg-black p-4 h-48 overflow-y-auto font-mono text-[11px] md:text-[10px] leading-relaxed text-green-400 border border-zinc-800 flex flex-col-reverse">
+          <div className="mt-4 bg-black p-4 h-48 overflow-y-auto font-mono text-[10px] leading-relaxed text-green-400 border border-zinc-800 flex flex-col-reverse">
             <div>
               {logs.map((log, i) => (
                 <div key={i} className="mb-1">{`> ${log}`}</div>

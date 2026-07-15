@@ -31,42 +31,6 @@ const uploadFileToServer = async (file: File): Promise<string> => {
 };
 
 
-const compressImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.8));
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-};
-
 interface AuthorPanelProps {
   userProfile: UserProfile | null;
   songs: Song[];
@@ -277,13 +241,13 @@ export default function AuthorPanel({
           <div className="flex gap-2">
             <button
               onClick={() => setUploadMode("single")}
-              className="flex h-10 items-center gap-1.5 rounded-none bg-red-600 px-5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-transform active:scale-95"
+              className="flex h-10 items-center gap-1.5 rounded-none bg-red-600 px-5 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-transform active:scale-95"
             >
               <Plus className="h-4.5 w-4.5" /> Single Track
             </button>
             <button
               onClick={() => setUploadMode("batch")}
-              className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-900 px-5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-transform active:scale-95"
+              className="flex h-10 items-center gap-1.5 rounded-none bg-zinc-900 px-5 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-transform active:scale-95"
             >
               <Upload className="h-4.5 w-4.5" /> Batch ZIP
             </button>
@@ -532,7 +496,7 @@ export default function AuthorPanel({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex h-11 items-center justify-center gap-2 rounded-none bg-red-600 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-md shadow-red-600/10 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? "Submitting Track..." : "Submit to Verification Review Queue"}
                 </button>
@@ -706,13 +670,13 @@ export default function AuthorPanel({
                   <button
                     type="button"
                     onClick={() => setEditingSong(null)}
-                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-xs font-bold text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider text-[11px] md:text-[10px]"
+                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-xs font-bold text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider text-[10px]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-sans text-xs font-bold text-white hover:bg-red-700 uppercase tracking-wider text-[11px] md:text-[10px]"
+                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-sans text-xs font-bold text-white hover:bg-red-700 uppercase tracking-wider text-[10px]"
                   >
                     <Save className="h-3.5 w-3.5" /> Save Changes
                   </button>
@@ -745,13 +709,13 @@ export default function AuthorPanel({
               <div className="flex justify-center gap-2 mt-5">
                 <button
                   onClick={() => setUploadMode("single")}
-                  className="rounded-none bg-red-600 px-5 py-2 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-red-700 cursor-pointer"
+                  className="rounded-none bg-red-600 px-5 py-2 font-sans text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-red-700 cursor-pointer"
                 >
                   Single Track
                 </button>
                 <button
                   onClick={() => setUploadMode("batch")}
-                  className="rounded-none bg-zinc-900 px-5 py-2 font-sans text-[11px] md:text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
+                  className="rounded-none bg-zinc-900 px-5 py-2 font-sans text-[10px] uppercase tracking-widest font-bold text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
                 >
                   Batch ZIP
                 </button>
@@ -762,7 +726,7 @@ export default function AuthorPanel({
 
         {/* My Submissions List side column */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm dark:border-zinc-850 dark:bg-zinc-950">
-          <h3 className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-widest mb-4">
+          <h3 className="font-mono text-[10px] font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-widest mb-4">
             My Upload Catalog ({mySongs.length})
           </h3>
 

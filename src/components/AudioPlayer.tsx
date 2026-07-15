@@ -332,7 +332,7 @@ export default function AudioPlayer({
 
           {/* Seek Bar */}
           <div className="mt-1 flex w-full items-center gap-3">
-            <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-right">
+            <span className="font-mono text-[10px] text-zinc-400 w-8 text-right">
               {formatTime(currentTime)}
             </span>
             <input
@@ -343,7 +343,7 @@ export default function AudioPlayer({
               onChange={handleSeekChange}
               className="h-1 w-full cursor-pointer appearance-none rounded-none bg-zinc-200 dark:bg-zinc-800 accent-red-600"
             />
-            <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-left">
+            <span className="font-mono text-[10px] text-zinc-400 w-8 text-left">
               {formatTime(duration)}
             </span>
           </div>
@@ -382,10 +382,10 @@ export default function AudioPlayer({
                     className="absolute bottom-10 right-0 z-40 w-80 rounded-none border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 flex flex-col"
                   >
                     <div className="flex items-center justify-between px-2 py-1 mb-2">
-                      <p className="font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                         Up Next
                       </p>
-                      <span className="font-mono text-[11px] md:text-[10px] text-zinc-400">
+                      <span className="font-mono text-[10px] text-zinc-400">
                         {queue.length} songs
                       </span>
                     </div>
@@ -512,7 +512,7 @@ export default function AudioPlayer({
                     </p>
                     <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5">
                       {playlists.length === 0 ? (
-                        <p className="px-2 py-1 font-sans text-[11px] md:text-[10px] text-zinc-400 italic">
+                        <p className="px-2 py-1 font-sans text-[10px] text-zinc-400 italic">
                           No custom playlists
                         </p>
                       ) : (
@@ -576,7 +576,7 @@ export default function AudioPlayer({
 
 
   return (
-    <motion.div layout transition={{ type: "spring", damping: 25, stiffness: 200 }} className={`fixed ${showLyrics ? 'top-0 bottom-0 z-[60]' : 'bottom-[calc(4rem+env(safe-area-inset-bottom))]'} md:top-auto md:bottom-0 left-0 right-0 z-50 flex flex-col bg-white/95 border-t border-zinc-200/80 shadow-2xl transition-colors dark:border-zinc-800 dark:bg-zinc-950/95 md:backdrop-blur-lg`}>
+    <motion.div layout transition={{ type: "spring", damping: 25, stiffness: 200 }} className={`fixed ${showLyrics ? 'top-0 bottom-0 z-[60]' : 'bottom-16'} md:top-auto md:bottom-0 left-0 right-0 z-50 flex flex-col bg-white/95 border-t border-zinc-200/80 shadow-2xl transition-colors dark:border-zinc-800 dark:bg-zinc-950/95 backdrop-blur-lg`}>
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
@@ -632,7 +632,7 @@ export default function AudioPlayer({
                     "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
                   }
                   alt="bg"
-                  className="w-full h-full object-cover opacity-20 blur-2xl md:opacity-30 md:blur-3xl md:saturate-[1.5]"
+                  className="w-full h-full object-cover opacity-30 blur-3xl saturate-[1.5]"
                />
                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/40 mix-blend-multiply" />
             </div>
@@ -740,40 +740,29 @@ export default function AudioPlayer({
             <div className="relative z-10 flex md:hidden w-full flex-col p-6 pt-16 h-full justify-between pb-10 overflow-y-auto no-scrollbar">
                 
                 
-                <div className="flex flex-col items-center flex-1 justify-center min-h-[300px] overflow-hidden w-full relative">
-                  <AnimatePresence mode="wait">
-                   <motion.div
-                     key={currentSong.id}
-                     initial={{ opacity: 0, x: 50, scale: 0.95 }}
-                     animate={{ opacity: 1, x: 0, scale: 1 }}
-                     exit={{ opacity: 0, x: -50, scale: 0.95 }}
-                     transition={{ duration: 0.3, ease: "easeOut" }}
-                     className="w-full flex flex-col items-center"
-                   >
-                     <img
-                       src={currentSong.coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"}
-                       alt={currentSong.title}
-                       className="w-full aspect-square max-w-[220px] object-cover rounded-[2rem] shadow-2xl ring-1 ring-white/10"
-                     />
-                     <div className="w-full mt-8 text-center px-4">
-                       <h3 className="font-serif text-3xl font-black text-white truncate drop-shadow-md pb-1">
-                         {currentSong.title}
-                       </h3>
-                       <p className="font-sans text-base text-zinc-300 font-medium tracking-wide truncate">
-                         {currentSong.artist}
-                         {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
-                           <span className="opacity-80 text-sm ml-1">feat. {currentSong.featuredArtists.join(", ")}</span>
-                         )}
-                       </p>
-                     </div>
-                   </motion.div>
-                  </AnimatePresence>
+                <div className="flex flex-col items-center flex-1 justify-center min-h-[300px]">
+                   <img
+                     src={currentSong.coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"}
+                     alt={currentSong.title}
+                     className="w-full aspect-square max-w-[220px] object-cover rounded-[2rem] shadow-2xl ring-1 ring-white/10"
+                   />
+                   <div className="w-full mt-8 text-center px-4">
+                     <h3 className="font-serif text-3xl font-black text-white truncate drop-shadow-md pb-1">
+                       {currentSong.title}
+                     </h3>
+                     <p className="font-sans text-base text-zinc-300 font-medium tracking-wide truncate">
+                       {currentSong.artist}
+                       {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
+                         <span className="opacity-80 text-sm ml-1">feat. {currentSong.featuredArtists.join(", ")}</span>
+                       )}
+                     </p>
+                   </div>
                 </div>
 
                 <div className="flex flex-col items-center w-full mt-4">
                   {/* Progress Bar */}
                   <div className="w-full max-w-[320px] flex items-center gap-3 mb-8">
-                    <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-right">{formatTime(currentTime)}</span>
+                    <span className="font-mono text-[10px] text-zinc-400 w-8 text-right">{formatTime(currentTime)}</span>
                     <div className="relative flex-1 flex items-center h-4 group">
                         <input
                         type="range"
@@ -785,7 +774,7 @@ export default function AudioPlayer({
                         style={{ zIndex: 10 }}
                         />
                     </div>
-                    <span className="font-mono text-[11px] md:text-[10px] text-zinc-400 w-8 text-left">{formatTime(duration)}</span>
+                    <span className="font-mono text-[10px] text-zinc-400 w-8 text-left">{formatTime(duration)}</span>
                   </div>
                   
                   {/* Controls Row */}
@@ -793,13 +782,13 @@ export default function AudioPlayer({
                     <button onClick={() => setPlaybackMode && setPlaybackMode(playbackMode === "shuffle" ? "normal" : "shuffle")} className={`p-2 transition-colors ${playbackMode === "shuffle" ? "text-red-500" : "text-zinc-400 hover:text-white"}`}>
                       <Shuffle className="h-5 w-5" />
                     </button>
-                    <button onClick={onPrev} className="p-4 -m-2 text-white active:text-zinc-300 transition-colors">
+                    <button onClick={onPrev} className="p-2 text-white hover:text-zinc-300 transition-colors">
                       <SkipBack className="h-8 w-8 fill-current" />
                     </button>
                     <button onClick={() => setIsPlaying(!isPlaying)} className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-105 active:scale-95">
                       {isPlaying ? <Pause className="h-8 w-8 fill-current" /> : <Play className="h-8 w-8 fill-current ml-1" />}
                     </button>
-                    <button onClick={onNext} className="p-4 -m-2 text-white active:text-zinc-300 transition-colors">
+                    <button onClick={onNext} className="p-2 text-white hover:text-zinc-300 transition-colors">
                       <SkipForward className="h-8 w-8 fill-current" />
                     </button>
                     <button onClick={() => {
@@ -855,22 +844,22 @@ export default function AudioPlayer({
              <img src={currentSong.coverUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} alt="cover" className="h-10 w-10 object-cover shrink-0 rounded-none border border-zinc-200 dark:border-zinc-850" />
              <div className="flex flex-col overflow-hidden min-w-0 pr-2 text-left">
                <span className="font-serif text-sm font-black italic tracking-tight text-zinc-900 dark:text-zinc-100 truncate">{currentSong.title}</span>
-               <span className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{currentSong.artist}</span>
+               <span className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{currentSong.artist}</span>
              </div>
            </div>
 
            {/* Controls */}
-           <div className="flex items-center gap-2 shrink-0 pr-1">
-              <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="p-3 -m-1 text-zinc-600 dark:text-zinc-400 active:text-zinc-900 dark:active:text-white">
+           <div className="flex items-center gap-1 shrink-0">
+              <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
                  <SkipBack className="h-4 w-4" fill="currentColor" />
               </button>
-              <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="p-3 -m-1 text-zinc-900 dark:text-white">
+              <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="p-2 text-zinc-900 dark:text-white">
                  {isPlaying ? <Pause className="h-5 w-5" fill="currentColor" /> : <Play className="h-5 w-5" fill="currentColor" />}
               </button>
-              <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="p-3 -m-1 text-zinc-600 dark:text-zinc-400 active:text-zinc-900 dark:active:text-white">
+              <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
                  <SkipForward className="h-4 w-4" fill="currentColor" />
               </button>
-              <button onClick={(e) => { e.stopPropagation(); setShowLyrics(!showLyrics); }} className={`p-3 -m-1 ${showLyrics ? "text-red-500" : "text-zinc-600 dark:text-zinc-400"}`}>
+              <button onClick={(e) => { e.stopPropagation(); setShowLyrics(!showLyrics); }} className={`p-2 ${showLyrics ? 'text-red-500' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
                  <ChevronUp className="h-5 w-5" />
               </button>
            </div>
@@ -900,7 +889,7 @@ export default function AudioPlayer({
             <h4 className="font-serif text-sm font-black italic tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
               {currentSong.title}
             </h4>
-            <p className="font-sans text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+            <p className="font-sans text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
               {currentSong.artist}
               {currentSong.featuredArtists && currentSong.featuredArtists.length > 0 && (
                 <span className="opacity-80"> feat. {currentSong.featuredArtists.join(", ")}</span>

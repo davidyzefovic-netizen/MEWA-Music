@@ -81,7 +81,7 @@ export default function AnalyticsPanel({ songs, history, totalUsersCount }: Anal
         {/* Card 1 */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm transition-all dark:border-zinc-850 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Streams</span>
+            <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Streams</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-none bg-red-500/10 text-red-600">
               <Play className="h-4 w-4 fill-current" />
             </div>
@@ -97,7 +97,7 @@ export default function AnalyticsPanel({ songs, history, totalUsersCount }: Anal
         {/* Card 2 */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm transition-all dark:border-zinc-850 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Favorites</span>
+            <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Favorites</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-none bg-red-500/10 text-red-600">
               <Heart className="h-4 w-4 fill-current" />
             </div>
@@ -113,7 +113,7 @@ export default function AnalyticsPanel({ songs, history, totalUsersCount }: Anal
         {/* Card 3 */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm transition-all dark:border-zinc-850 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Songs Pool</span>
+            <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Songs Pool</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-none bg-red-500/10 text-red-600">
               <Music className="h-4 w-4" />
             </div>
@@ -129,7 +129,7 @@ export default function AnalyticsPanel({ songs, history, totalUsersCount }: Anal
         {/* Card 4 */}
         <div className="rounded-none border border-zinc-200/60 bg-white p-5 shadow-sm transition-all dark:border-zinc-850 dark:bg-zinc-950">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Listeners</span>
+            <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Listeners</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-none bg-red-500/10 text-red-600">
               <Users className="h-4 w-4" />
             </div>
@@ -239,7 +239,7 @@ export default function AnalyticsPanel({ songs, history, totalUsersCount }: Anal
                   className="h-2 w-2 rounded-none"
                   style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                 />
-                <span className="font-serif text-[11px] md:text-[10px] italic text-zinc-500 dark:text-zinc-400">
+                <span className="font-serif text-[10px] italic text-zinc-500 dark:text-zinc-400">
                   {entry.name} ({entry.value})
                 </span>
               </div>

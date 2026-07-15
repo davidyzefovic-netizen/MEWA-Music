@@ -128,7 +128,7 @@ async function deleteDocDb(collection: string, id: string) {
   app.use("/uploads", express.static(uploadDir));
 
   // Upload API route
-  app.post("/api/upload", handleUpload("file"), (req, res) => {
+  app.post("/api/upload", upload.single("file"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
@@ -137,147 +137,7 @@ async function deleteDocDb(collection: string, id: string) {
   });
 
   // Upload Archive API route
-  app.post("/api/upload-artists-archive", handleUpload("archive"), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: "No archive uploaded" });
-    const archivePath = req.file.path;
-    const extractDir = path.join(uploadDir, "temp_extract_artists_" + Date.now());
-    let logs: string[] = [];
-    const stats = { added: 0, skipped: 0, errors: 0 };
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    const sendProgress = (msg: string, isError = false) => {
-      res.write(`data: ${JSON.stringify({ type: 'log', message: msg, isError })}\n\n`);
-      logs.push(msg);
-    };
-
-    const flushAndEnd = (result: any) => {
-      res.write(`data: ${JSON.stringify({ type: 'complete', ...result })}\n\n`);
-      res.end();
-    };
-
-    try {
-      sendProgress(`Unzipping ${req.file.originalname}...`);
-      const zip = new AdmZip(archivePath);
-      zip.extractAllTo(extractDir, true);
-      sendProgress(`Extracted successfully.`);
-
-      const artistsDir = path.join(uploadDir, "artists");
-      await fsx.ensureDir(artistsDir);
-
-      let artistsJsonPath = path.join(extractDir, "artists.json");
-      let artistsData: any[] = [];
-      
-      if (!fs.existsSync(artistsJsonPath)) {
-        const rootItems = await fsx.readdir(extractDir);
-        if (rootItems.length === 1) {
-            const nestedPath = path.join(extractDir, rootItems[0]);
-            const stat = await fsx.stat(nestedPath);
-            if (stat.isDirectory() && fs.existsSync(path.join(nestedPath, "artists.json"))) {
-                artistsJsonPath = path.join(nestedPath, "artists.json");
-                sendProgress("Found nested artists.json.");
-            }
-        }
-      }
-
-      if (fs.existsSync(artistsJsonPath)) {
-        sendProgress("Found artists.json, using as primary data source.");
-        try {
-          artistsData = await fsx.readJson(artistsJsonPath);
-          if (!Array.isArray(artistsData) || artistsData.length === 0) {
-            sendProgress("Error: artists.json is empty or invalid format (must be array).", true);
-            artistsData = [];
-          }
-        } catch (e: any) {
-          sendProgress("Error parsing artists.json: " + e.message, true);
-        }
-      } else {
-        sendProgress("No artists.json found.", true);
-        flushAndEnd({ stats });
-        return;
-      }
-
-      sendProgress(`Processing ${artistsData.length} artists...`);
-      const baseDir = path.dirname(artistsJsonPath);
-
-      for (let i = 0; i < artistsData.length; i++) {
-        const a = artistsData[i];
-        sendProgress(`Progress: ${Math.round((i / artistsData.length) * 100)}%`);
-        sendProgress(`Processing artist: ${a.id} (${a.name})`);
-        
-        const existingArtist = await getDocDb('artists', a.id);
-        if (existingArtist) {
-           sendProgress(`Artist ${a.id} already exists, skipping.`, false);
-           stats.skipped++;
-           continue;
-        }
-
-        let photoUrl = "";
-        if (a.photo) {
-           const photoFilePath = path.join(baseDir, a.photo);
-           if (fs.existsSync(photoFilePath)) {
-              const ext = path.extname(a.photo);
-              const newPhotoName = `${a.id}${ext}`;
-              const destPath = path.join(artistsDir, newPhotoName);
-              await fsx.copy(photoFilePath, destPath);
-              photoUrl = `/uploads/artists/${newPhotoName}`;
-           } else {
-              sendProgress(`Photo missing for ${a.id}: ${a.photo}`, true);
-           }
-        }
-
-        const newArtist = {
-            id: a.id,
-            name: a.name,
-            bio: a.bio || "",
-            imageUrl: photoUrl,
-            genres: a.genre ? [a.genre] : [],
-            albums: [],
-            songs: [],
-            createdBy: "admin",
-            createdAt: new Date().toISOString()
-        };
-
-        if (a.tags && Array.isArray(a.tags)) {
-            newArtist.genres = [...new Set([...newArtist.genres, ...a.tags])];
-        }
-
-        await setDocDb('artists', a.id, newArtist);
-        sendProgress(`Successfully added artist ${a.name}`);
-        stats.added++;
-      }
-
-      sendProgress(`Progress: 100%`);
-      sendProgress(`Batch process finished. Added: ${stats.added}, Skipped: ${stats.skipped}, Errors: ${stats.errors}`);
-      flushAndEnd({ stats });
-    } catch (err: any) {
-      sendProgress(`Fatal error: ${err.message}`, true);
-      flushAndEnd({ stats });
-    } finally {
-      if (fs.existsSync(archivePath)) {
-        await fsx.remove(archivePath);
-      }
-      await fsx.remove(extractDir).catch(e => console.error("Cleanup error:", e));
-    }
-  });
-
-  function handleUpload(field) { return function(req, res, next) {
-    upload.single(field)(req, res, (err) => {
-      if (err) {
-        if (err.message === 'Request aborted') {
-          console.error("Upload aborted! This is usually caused by PM2 --watch restarting the server when the file is written, or Nginx closing the connection due to client_max_body_size limit.");
-          return res.status(400).json({ error: "Upload aborted (check PM2 watch or Nginx client_max_body_size)" });
-        }
-        console.error("Upload error:", err);
-        return res.status(500).json({ error: "Upload error: " + err.message });
-      }
-      next();
-    });
-  };
-}
-
-  app.post("/api/upload-archive", handleUpload("archive"), async (req, res) => {
+  app.post("/api/upload-archive", upload.single("archive"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No archive uploaded" });
     }
@@ -346,10 +206,10 @@ async function deleteDocDb(collection: string, id: string) {
               if (stat.isDirectory()) {
                  const artistTracks = await fsx.readdir(itemPath);
                  for (const tr of artistTracks) {
-                    if (tr.endsWith('.mp3') || tr.endsWith('.m4a') || tr.endsWith('.wav')) {
+                    if (tr.endsWith('.mp3')) {
                        tracks.push({
-                          id: `${item}-${tr.replace(/\.(mp3|m4a|wav)$/i, '')}`,
-                          title: tr.replace(/\.(mp3|m4a|wav)$/i, ''),
+                          id: `${item}-${tr.replace('.mp3', '')}`,
+                          title: tr.replace('.mp3', ''),
                           artist: item,
                           artistId: item,
                           album: item,
@@ -358,8 +218,8 @@ async function deleteDocDb(collection: string, id: string) {
                        });
                     }
                  }
-              } else if (item.endsWith('.mp3') || item.endsWith('.m4a') || item.endsWith('.wav')) {
-                 const base = item.replace(/\.(mp3|m4a|wav)$/i, '');
+              } else if (item.endsWith('.mp3')) {
+                 const base = item.replace('.mp3', '');
                  const parts = base.split('-');
                  tracks.push({
                     id: base,
@@ -468,7 +328,7 @@ async function deleteDocDb(collection: string, id: string) {
            title: t.title,
            artist: t.artist,
            album: t.album,
-           audioUrl: `/uploads/songs/${artistId}/${trackId}${path.extname(req.files['audio'][0].originalname)}`,
+           audioUrl: `/uploads/songs/${artistId}/${trackId}.mp3`,
            coverUrl: coverFileUrl,
            lyrics: t.lyrics || "",
            genres: t.genre ? [t.genre] : [],
@@ -615,12 +475,9 @@ async function deleteDocDb(collection: string, id: string) {
     });
   }
 
-  const server = app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
-  server.keepAliveTimeout = 300000;
-  server.headersTimeout = 305000;
-  server.timeout = 300000;
 }
 
 startServer();

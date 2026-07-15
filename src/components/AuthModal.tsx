@@ -90,7 +90,7 @@ export default function AuthModal({ isOpen, onClose, darkMode }: AuthModalProps)
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className={`mb-1.5 block font-mono text-[11px] md:text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-500"}`}>
+                <label className={`mb-1.5 block font-mono text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-500"}`}>
                   Email
                 </label>
                 <div className="relative">
@@ -111,7 +111,7 @@ export default function AuthModal({ isOpen, onClose, darkMode }: AuthModalProps)
               </div>
 
               <div>
-                <label className={`mb-1.5 block font-mono text-[11px] md:text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-500"}`}>
+                <label className={`mb-1.5 block font-mono text-[10px] uppercase tracking-wider ${darkMode ? "text-zinc-500" : "text-zinc-500"}`}>
                   Пароль
                 </label>
                 <div className="relative">

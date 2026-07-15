@@ -134,7 +134,7 @@ export default function AdminDashboard({
       <div className="flex border-b border-zinc-200 dark:border-zinc-800">
         <button
           onClick={() => setActiveTab("users")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "users"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -144,7 +144,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("songs")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "songs"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -154,7 +154,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("complaints")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "complaints"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -164,7 +164,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("banners")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "banners"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -174,7 +174,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("applications")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[11px] md:text-[10px] uppercase tracking-widest font-bold transition-all ${
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 font-mono text-[10px] uppercase tracking-widest font-bold transition-all ${
             activeTab === "applications"
               ? "border-red-600 text-red-600 dark:text-red-400"
               : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -193,10 +193,10 @@ export default function AdminDashboard({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950/40">
-                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">User Profile</th>
-                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Email Address</th>
-                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Role Access</th>
-                    <th className="px-5 py-3.5 font-mono text-[11px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">User Profile</th>
+                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Email Address</th>
+                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Role Access</th>
+                    <th className="px-5 py-3.5 font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
@@ -300,13 +300,13 @@ export default function AdminDashboard({
                       <div className="flex items-center gap-2 self-end md:self-auto">
                         <button
                           onClick={() => onUpdateSongStatus(song.id, "approved")}
-                          className="flex h-8 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white shadow-sm hover:bg-red-700 cursor-pointer"
+                          className="flex h-8 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-white shadow-sm hover:bg-red-700 cursor-pointer"
                         >
                           <Check className="h-3.5 w-3.5" /> Approve
                         </button>
                         <button
                           onClick={() => onUpdateSongStatus(song.id, "rejected")}
-                          className="flex h-8 items-center gap-1.5 rounded-none bg-zinc-150 border border-zinc-250 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-300 dark:border-zinc-700 cursor-pointer"
+                          className="flex h-8 items-center gap-1.5 rounded-none bg-zinc-150 border border-zinc-250 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-300 dark:border-zinc-700 cursor-pointer"
                         >
                           <X className="h-3.5 w-3.5" /> Reject
                         </button>
@@ -341,7 +341,7 @@ export default function AdminDashboard({
                           <h4 className="font-serif text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                             {song.title}
                           </h4>
-                          <p className="font-serif text-[11px] md:text-[10px] text-zinc-500 dark:text-zinc-400 truncate italic">
+                          <p className="font-serif text-[10px] text-zinc-500 dark:text-zinc-400 truncate italic">
                             {song.artist} • {song.album || "Single"}
                           </p>
                         </div>
@@ -426,13 +426,13 @@ export default function AdminDashboard({
                       <div className="mt-3.5 flex gap-2.5">
                         <button
                           onClick={() => onUpdateComplaintStatus(ticket.id, "resolved")}
-                          className="flex h-7 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-white hover:bg-red-700 cursor-pointer"
+                          className="flex h-7 items-center gap-1.5 rounded-none bg-red-600 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-white hover:bg-red-700 cursor-pointer"
                         >
                           <Check className="h-3 w-3" /> Resolve (Remove Content)
                         </button>
                         <button
                           onClick={() => onUpdateComplaintStatus(ticket.id, "dismissed")}
-                          className="flex h-7 items-center gap-1.5 rounded-none bg-zinc-150 px-3 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 cursor-pointer"
+                          className="flex h-7 items-center gap-1.5 rounded-none bg-zinc-150 px-3 font-sans text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 cursor-pointer"
                         >
                           <X className="h-3 w-3" /> Dismiss Ticket
                         </button>
@@ -476,7 +476,7 @@ export default function AdminDashboard({
                 <button
                   type="submit"
                   disabled={isUploadingBanner || !newBannerImage}
-                  className="bg-zinc-900 text-white font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                  className="bg-zinc-900 text-white font-mono text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
                 >
                   {isUploadingBanner ? "Uploading..." : "Add Banner"}
                 </button>
@@ -503,7 +503,7 @@ export default function AdminDashboard({
                       </div>
                       <button
                         onClick={() => onDeleteBanner(banner.id)}
-                        className="text-red-600 hover:text-red-700 font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest"
+                        className="text-red-600 hover:text-red-700 font-mono text-[10px] font-bold uppercase tracking-widest"
                       >
                         Delete
                       </button>
@@ -536,7 +536,7 @@ export default function AdminDashboard({
                       <p className="font-serif text-sm font-bold text-zinc-900 dark:text-zinc-100">
                         {app.artistName}
                       </p>
-                      <p className="font-sans text-[11px] md:text-[10px] text-zinc-500">
+                      <p className="font-sans text-[10px] text-zinc-500">
                         Applied: {new Date(app.createdAt).toLocaleString()} • User: {app.userEmail}
                       </p>
                       <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
@@ -654,13 +654,13 @@ export default function AdminDashboard({
                 <div className="flex gap-2.5 justify-end pt-3">
                   <button
                     onClick={() => setEditingSong(null)}
-                    className="rounded-none bg-zinc-100 px-4 py-2 font-mono text-[11px] md:text-[10px] font-bold text-zinc-650 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider cursor-pointer"
+                    className="rounded-none bg-zinc-100 px-4 py-2 font-mono text-[10px] font-bold text-zinc-650 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 uppercase tracking-wider cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={saveSongEdits}
-                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-mono text-[11px] md:text-[10px] font-bold text-white hover:bg-red-700 uppercase tracking-wider cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-none bg-red-600 px-4 py-2 font-mono text-[10px] font-bold text-white hover:bg-red-700 uppercase tracking-wider cursor-pointer"
                   >
                     <Save className="h-3.5 w-3.5" /> Save Changes
                   </button>

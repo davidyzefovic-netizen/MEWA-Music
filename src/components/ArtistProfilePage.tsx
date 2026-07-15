@@ -303,7 +303,7 @@ export default function ArtistProfilePage({
         {/* Back navigation */}
         <button
           onClick={onBack}
-          className="absolute top-6 left-6 flex h-8.5 items-center gap-1.5 rounded-none bg-black/45 px-3.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white md:backdrop-blur-sm border border-white/10 hover:bg-black/70 transition-colors cursor-pointer z-20"
+          className="absolute top-6 left-6 flex h-8.5 items-center gap-1.5 rounded-none bg-black/45 px-3.5 font-sans text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm border border-white/10 hover:bg-black/70 transition-colors cursor-pointer z-20"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to artists
         </button>
@@ -312,7 +312,7 @@ export default function ArtistProfilePage({
         {canEdit && !isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="absolute top-6 right-6 flex h-8.5 items-center gap-1.5 rounded-none bg-red-600 px-3.5 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700 transition-colors cursor-pointer z-20"
+            className="absolute top-6 right-6 flex h-8.5 items-center gap-1.5 rounded-none bg-red-600 px-3.5 font-sans text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700 transition-colors cursor-pointer z-20"
           >
             <Edit3 className="h-3.5 w-3.5" /> Edit Profile
           </button>
@@ -332,7 +332,7 @@ export default function ArtistProfilePage({
 
         <div className="flex-1 text-white pb-3">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] md:text-[10px] font-bold uppercase tracking-widest text-amber-400">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400">
               Verified Artist Profile
             </span>
           </div>
@@ -439,14 +439,14 @@ export default function ArtistProfilePage({
                       <div className="flex items-center gap-2 w-full text-left">
                         <img src={editImagePreview} alt="Preview" className="h-14 w-14 object-cover border border-zinc-250 shrink-0" />
                         <div className="overflow-hidden">
-                          <p className="font-sans text-[11px] md:text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{editImageFile?.name || "Original Artwork"}</p>
+                          <p className="font-sans text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{editImageFile?.name || "Original Artwork"}</p>
                           <p className="font-mono text-[8px] text-zinc-400">Compressed JPEG</p>
                         </div>
                       </div>
                     ) : (
                       <>
                         <Upload className="h-5 w-5 text-zinc-400 mb-1" />
-                        <span className="font-sans text-[11px] md:text-[10px] text-zinc-500">Choose Image File</span>
+                        <span className="font-sans text-[10px] text-zinc-500">Choose Image File</span>
                       </>
                     )}
                   </div>
@@ -472,14 +472,14 @@ export default function ArtistProfilePage({
                       <div className="flex items-center gap-2 w-full text-left">
                         <img src={editBannerPreview} alt="Preview" className="h-14 w-20 object-cover border border-zinc-250 shrink-0" />
                         <div className="overflow-hidden">
-                          <p className="font-sans text-[11px] md:text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{editBannerFile?.name || "Original Banner"}</p>
+                          <p className="font-sans text-[10px] font-semibold text-zinc-900 dark:text-zinc-150 truncate">{editBannerFile?.name || "Original Banner"}</p>
                           <p className="font-mono text-[8px] text-zinc-400">Compressed JPEG</p>
                         </div>
                       </div>
                     ) : (
                       <>
                         <FileImage className="h-5 w-5 text-zinc-400 mb-1" />
-                        <span className="font-sans text-[11px] md:text-[10px] text-zinc-500">Choose Banner File</span>
+                        <span className="font-sans text-[10px] text-zinc-500">Choose Banner File</span>
                       </>
                     )}
                   </div>
@@ -512,7 +512,7 @@ export default function ArtistProfilePage({
                       }
                     }}
                     disabled={submitting}
-                    className="rounded-none border border-red-600/30 text-red-600 px-4 py-2 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="rounded-none border border-red-600/30 text-red-600 px-4 py-2 font-sans text-[10px] font-bold uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     Delete Artist
                   </button>
@@ -522,14 +522,14 @@ export default function ArtistProfilePage({
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400"
+                    className="rounded-none bg-zinc-150 px-4 py-2 font-sans text-[10px] font-bold uppercase tracking-wider text-zinc-650 dark:bg-zinc-850 dark:text-zinc-400"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="rounded-none bg-red-600 px-4 py-2 font-sans text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700"
+                    className="rounded-none bg-red-600 px-4 py-2 font-sans text-[10px] font-bold uppercase tracking-wider text-white hover:bg-red-700"
                   >
                     {submitting ? "Saving..." : "Save Artist"}
                   </button>
@@ -563,7 +563,7 @@ export default function ArtistProfilePage({
                     {canEdit && (
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="mt-3 block mx-auto text-red-600 hover:underline font-bold text-[11px] md:text-[10px] uppercase tracking-wider"
+                        className="mt-3 block mx-auto text-red-600 hover:underline font-bold text-[10px] uppercase tracking-wider"
                       >
                         Create Wiki Content Now
                       </button>
@@ -587,7 +587,7 @@ export default function ArtistProfilePage({
                     {canEdit && (
                       <button
                         onClick={() => setIsCreatingAlbum(!isCreatingAlbum)}
-                        className="font-sans text-[11px] md:text-[10px] uppercase tracking-wider font-bold text-red-600 hover:text-red-700 transition-colors"
+                        className="font-sans text-[10px] uppercase tracking-wider font-bold text-red-600 hover:text-red-700 transition-colors"
                       >
                         {isCreatingAlbum ? "Cancel" : "+ New Album"}
                       </button>
@@ -666,14 +666,14 @@ export default function ArtistProfilePage({
                                 <h5 className="font-serif text-xs font-bold text-zinc-900 dark:text-zinc-150 truncate">
                                   {song.title}
                                 </h5>
-                                <p className="font-sans text-[11px] md:text-[10px] text-zinc-450 truncate">
+                                <p className="font-sans text-[10px] text-zinc-450 truncate">
                                   Single
                                 </p>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
-                              <span className="font-mono text-[11px] md:text-[10px] text-zinc-400">
+                              <span className="font-mono text-[10px] text-zinc-400">
                                 {song.listensCount || 0} listens
                               </span>
                               <button
