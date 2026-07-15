@@ -615,9 +615,12 @@ async function deleteDocDb(collection: string, id: string) {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
+  server.keepAliveTimeout = 300000;
+  server.headersTimeout = 305000;
+  server.timeout = 300000;
 }
 
 startServer();
